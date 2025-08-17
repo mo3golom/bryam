@@ -35,7 +35,7 @@ export function parseChordPro(text: string): ParsedSong {
       continue
     }
 
-    // Regex to match chord patterns in square brackets
+    // Regex to match chord patterns in square brackets (only properly closed brackets)
     const chordRegex = /\[([^\]]*)\]/g
     let lastIndex = 0
     let match
@@ -44,6 +44,11 @@ export function parseChordPro(text: string): ParsedSong {
       const chordStart = match.index
       const chordEnd = chordRegex.lastIndex
       const chord = match[1]
+
+      // Skip empty chords or chords with invalid characters
+      if (!chord || chord.trim() === '') {
+        continue
+      }
 
       // Add text before the chord (if any)
       if (chordStart > lastIndex) {

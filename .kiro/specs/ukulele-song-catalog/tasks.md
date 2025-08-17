@@ -15,7 +15,7 @@
   - Store all database migrations in ./migrations directory
   - _Requirements: 3.2, 3.3, 3.4_
 
-- [ ] 3. Implement ChordPro parser utility
+- [-] 3. Implement ChordPro parser utility
   - Create parseChordPro function that handles standard chord notation patterns
   - Support major, minor, diminished, augmented, and suspended chords
   - Handle malformed ChordPro content gracefully without breaking interface
