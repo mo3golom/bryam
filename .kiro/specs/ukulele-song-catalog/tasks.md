@@ -35,7 +35,7 @@
   - Handle empty song content and display appropriate messages
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.2_
 
-- [ ] 6. Write tests for SongViewer component
+- [-] 6. Write tests for SongViewer component
   - Create component tests for SongViewer rendering with different prop combinations
   - Test mobile-first responsive behavior and chord alignment
   - Verify proper handling of empty and malformed song data

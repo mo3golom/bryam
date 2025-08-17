@@ -17,6 +17,10 @@ describe('SongViewer Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset mock implementation to default behavior
+    mockParseChordPro.mockImplementation((text: string) => ({
+      lines: []
+    }))
     target = document.createElement('div')
     document.body.appendChild(target)
   })
@@ -233,6 +237,104 @@ describe('SongViewer Component', () => {
       expect(chordElement?.className).toContain('text-sm')
       expect(chordElement?.textContent).toBe('Am')
     })
+
+    it('should maintain chord-to-lyric alignment with multiple chords per line', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Multi-chord Song',
+        artist: 'Artist',
+        body: '[C]Some[G]where [Am]over the [F]rainbow'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [
+              { chord: 'C', word: 'Some' },
+              { chord: 'G', word: 'where' },
+              { chord: null, word: ' ' },
+              { chord: 'Am', word: 'over' },
+              { chord: null, word: ' the ' },
+              { chord: 'F', word: 'rainbow' }
+            ]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const chordWordPairs = target.querySelectorAll('.chord-word-pair')
+      expect(chordWordPairs).toHaveLength(6)
+
+      // Verify chord alignment structure
+      const firstPair = chordWordPairs[0]
+      const chordElement = firstPair.querySelector('.chord')
+      const wordElement = firstPair.querySelector('.word')
+      
+      expect(chordElement?.textContent).toBe('C')
+      expect(wordElement?.textContent).toBe('Some')
+    })
+
+    it('should handle empty lines for proper song spacing', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Spaced Song',
+        artist: 'Artist',
+        body: '[C]First line\n\n[G]Second line'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'First line' }]
+          },
+          {
+            parts: [{ chord: null, word: '' }]
+          },
+          {
+            parts: [{ chord: 'G', word: 'Second line' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const lineContainers = target.querySelectorAll('.line-container')
+      expect(lineContainers).toHaveLength(3)
+
+      // Check for empty line spacing
+      const emptyLineSpacing = target.querySelector('.h-4')
+      expect(emptyLineSpacing).toBeTruthy()
+    })
+
+    it('should apply touch-friendly styling for mobile devices', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Touch Song',
+        artist: 'Artist',
+        body: '[C]Touch friendly'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'Touch friendly' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const lineContainer = target.querySelector('.line-container')
+      expect(lineContainer).toBeTruthy()
+      
+      // Verify touch-action is set for mobile optimization
+      const computedStyle = window.getComputedStyle(lineContainer!)
+      expect(lineContainer?.className).toContain('line-container')
+    })
   })
 
   describe('Accessibility features and keyboard navigation', () => {
@@ -327,6 +429,119 @@ describe('SongViewer Component', () => {
       // It's a display component, so no focusable elements expected
       expect(focusableElements).toHaveLength(0)
     })
+
+    it('should have proper heading hierarchy for screen readers', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Hierarchy Song',
+        artist: 'Artist',
+        body: '[C]Content'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'Content' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      // Should have exactly one h1 element
+      const h1Elements = target.querySelectorAll('h1')
+      expect(h1Elements).toHaveLength(1)
+      
+      // Should not have any other heading levels (h2, h3, etc.)
+      const otherHeadings = target.querySelectorAll('h2, h3, h4, h5, h6')
+      expect(otherHeadings).toHaveLength(0)
+    })
+
+    it('should provide high contrast text for readability', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Contrast Song',
+        artist: 'Artist',
+        body: '[C]High contrast text'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'High contrast text' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      // Check title has high contrast styling
+      const title = target.querySelector('h1')
+      expect(title?.className).toContain('text-gray-900')
+
+      // Check artist has readable contrast
+      const artist = target.querySelector('header p')
+      expect(artist?.className).toContain('text-gray-600')
+
+      // Check chord text has good contrast
+      const chord = target.querySelector('.chord')
+      expect(chord?.className).toContain('text-blue-600')
+
+      // Check lyric text has high contrast
+      const word = target.querySelector('.word')
+      expect(word?.className).toContain('text-gray-900')
+    })
+
+    it('should support screen reader navigation with proper text structure', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Navigation Song',
+        artist: 'Navigation Artist',
+        body: '[C]First [G]line\n[Am]Second [F]line'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [
+              { chord: 'C', word: 'First' },
+              { chord: null, word: ' ' },
+              { chord: 'G', word: 'line' }
+            ]
+          },
+          {
+            parts: [
+              { chord: 'Am', word: 'Second' },
+              { chord: null, word: ' ' },
+              { chord: 'F', word: 'line' }
+            ]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      // Verify all text content is present and accessible
+      const allText = target.textContent || ''
+      expect(allText).toContain('Navigation Song')
+      expect(allText).toContain('Navigation Artist')
+      expect(allText).toContain('C')
+      expect(allText).toContain('First')
+      expect(allText).toContain('G')
+      expect(allText).toContain('line')
+      expect(allText).toContain('Am')
+      expect(allText).toContain('Second')
+      expect(allText).toContain('F')
+
+      // Verify proper document structure for screen readers
+      const header = target.querySelector('header')
+      const main = target.querySelector('main')
+      expect(header).toBeTruthy()
+      expect(main).toBeTruthy()
+    })
   })
 
   describe('Edge cases and error handling', () => {
@@ -394,6 +609,134 @@ describe('SongViewer Component', () => {
       expect(() => {
         mount(SongViewer, { target, props: { songData } })
       }).toThrow('Parser error')
+    })
+
+    it('should handle whitespace-only song body', () => {
+      // Reset mock to normal behavior for this test
+      mockParseChordPro.mockReturnValue({
+        lines: []
+      })
+
+      const songData: Song = {
+        id: '1',
+        title: 'Whitespace Song',
+        artist: 'Artist',
+        body: '   \n\t  \n   '
+      }
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      expect(target.textContent).toContain('No content available for this song.')
+      expect(mockParseChordPro).toHaveBeenCalledWith('   \n\t  \n   ')
+    })
+
+    it('should handle null body gracefully', () => {
+      // Reset mock to normal behavior for this test
+      mockParseChordPro.mockReturnValue({
+        lines: []
+      })
+
+      const songData: Song = {
+        id: '1',
+        title: 'Null Body Song',
+        artist: 'Artist',
+        body: null as any // Simulating potential null value
+      }
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      expect(target.textContent).toContain('No content available for this song.')
+    })
+
+    it('should handle undefined artist gracefully', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Undefined Artist Song',
+        artist: undefined as any,
+        body: '[C]Content'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'Content' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const heading = target.querySelector('h1')
+      expect(heading?.textContent).toBe('Undefined Artist Song')
+      
+      // Should not display artist section when undefined
+      const artistElement = target.querySelector('header p')
+      expect(artistElement).toBeFalsy()
+    })
+
+    it('should handle empty string artist', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Empty Artist Song',
+        artist: '',
+        body: '[C]Content'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [{ chord: 'C', word: 'Content' }]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const heading = target.querySelector('h1')
+      expect(heading?.textContent).toBe('Empty Artist Song')
+      
+      // Should NOT display artist section when empty string (falsy in Svelte)
+      const artistElement = target.querySelector('header p')
+      expect(artistElement).toBeFalsy()
+    })
+
+    it('should handle complex chord progressions with many chords per line', () => {
+      const songData: Song = {
+        id: '1',
+        title: 'Complex Chords',
+        artist: 'Artist',
+        body: '[C][G][Am][F][C][G][F][C]'
+      }
+
+      mockParseChordPro.mockReturnValue({
+        lines: [
+          {
+            parts: [
+              { chord: 'C', word: '' },
+              { chord: 'G', word: '' },
+              { chord: 'Am', word: '' },
+              { chord: 'F', word: '' },
+              { chord: 'C', word: '' },
+              { chord: 'G', word: '' },
+              { chord: 'F', word: '' },
+              { chord: 'C', word: '' }
+            ]
+          }
+        ]
+      })
+
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+
+      const chordElements = target.querySelectorAll('.chord')
+      expect(chordElements).toHaveLength(8)
+      
+      const chordTexts = Array.from(chordElements).map(el => el.textContent)
+      expect(chordTexts).toEqual(['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'C'])
     })
   })
 })
