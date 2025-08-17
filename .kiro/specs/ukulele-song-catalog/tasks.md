@@ -50,14 +50,14 @@
   - Ensure container never exceeds TailwindCSS md breakpoint
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.3_
 
-- [-] 8. Write tests for song list functionality
+- [x] 8. Write tests for song list functionality
   - Create integration tests for song list loading and navigation
   - Test loading states, error handling, and empty state scenarios
   - Verify mobile-first responsive layout behavior
   - Test touch-friendly navigation and accessibility
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.3_
 
-- [ ] 9. Create individual song page with responsive display
+- [-] 9. Create individual song page with responsive display
   - Implement /songs/[id] route that fetches full song data by ID
   - Integrate SongViewer component for ChordPro rendering
   - Handle 404 errors for non-existent songs with navigation back to list

@@ -8,7 +8,7 @@
   $: hasContent = songData.body && songData.body.trim().length > 0
 </script>
 
-<div class="w-full max-w-md mx-auto px-4 py-6">
+<div class="w-full max-w-md mx-auto bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-6">
   <!-- Song Header -->
   <header class="mb-6 text-center">
     <h1 class="text-2xl font-bold text-gray-900 mb-2 leading-tight">

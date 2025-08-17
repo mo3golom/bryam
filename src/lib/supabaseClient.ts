@@ -12,17 +12,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create and export Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Type definitions for our database schema
-export interface Song {
-  id: string;
-  title: string;
-  artist: string | null;
-  body: string;
-  created_at: string;
-}
-
-export interface SongListItem {
-  id: string;
-  title: string;
-  artist: string | null;
-}
+// Note: Type definitions are in src/lib/types.ts to avoid duplication
