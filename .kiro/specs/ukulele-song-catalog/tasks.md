@@ -57,14 +57,14 @@
   - Test touch-friendly navigation and accessibility
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.3_
 
-- [-] 9. Create individual song page with responsive display
+- [x] 9. Create individual song page with responsive display
   - Implement /songs/[id] route that fetches full song data by ID
   - Integrate SongViewer component for ChordPro rendering
   - Handle 404 errors for non-existent songs with navigation back to list
   - Optimize mobile network performance and loading states
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.4_
 
-- [ ] 10. Write tests for individual song page
+- [-] 10. Write tests for individual song page
   - Create integration tests for song page loading and ChordPro rendering
   - Test 404 error handling and navigation flows
   - Verify mobile performance and loading state behavior
