@@ -35,14 +35,14 @@
   - Handle empty song content and display appropriate messages
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.2_
 
-- [-] 6. Write tests for SongViewer component
+- [x] 6. Write tests for SongViewer component
   - Create component tests for SongViewer rendering with different prop combinations
   - Test mobile-first responsive behavior and chord alignment
   - Verify proper handling of empty and malformed song data
   - Test accessibility features and keyboard navigation
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.2_
 
-- [ ] 7. Implement song list page with mobile-first layout
+- [-] 7. Implement song list page with mobile-first layout
   - Create /songs route that fetches song metadata from Supabase
   - Build SongList component with single-column mobile-first card layout
   - Implement loading states, error handling, and empty state display
