@@ -29,14 +29,14 @@
       </div>
     {:else}
       <div class="space-y-4">
-        {#each parsedSong.lines as line, lineIndex}
+        {#each parsedSong.lines as line}
           <div class="line-container">
             {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ''}
               <!-- Empty line for spacing -->
               <div class="h-4"></div>
             {:else}
               <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
-                {#each line.parts as part, partIndex}
+                {#each line.parts as part}
                   <div class="chord-word-pair inline-block">
                     {#if part.chord}
                       <div class="chord text-blue-600 font-semibold text-sm leading-none mb-1 min-h-[1rem]">
