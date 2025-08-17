@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Mobile-first base styles */
+@layer base {
+  html {
+    @apply text-base;
+  }
+
+  body {
+    @apply font-sans text-gray-900 bg-white;
+  }
+
+  /* Ensure all containers respect max-width md (768px) */
+  .container {
+    @apply max-w-3xl mx-auto px-4;
+  }
+}
+
+/* Custom components for mobile-first design */
+@layer components {
+  .song-card {
+    @apply bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer transition-shadow hover:shadow-lg;
+  }
+
+  .chord {
+    @apply text-blue-600 font-mono text-sm font-semibold;
+  }
+
+  .lyric {
+    @apply text-gray-800 leading-relaxed;
+  }
+}
