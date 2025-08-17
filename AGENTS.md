@@ -24,6 +24,10 @@ import { env } from '$env/dynamic/private';
 
 export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
 ```
+- Use server-side load functions to fetch data before rendering pages
+- Leverage SvelteKit's server-only modules for sensitive operations
+- Implement route groups (folders with parentheses) for logical organization without URL impact
+- Use the new Embedded SvelteKit plugin system
 
 ### Tailwindcss
 - AGENT SHOULD follow the Tailwind zero-confg approach when implement new features

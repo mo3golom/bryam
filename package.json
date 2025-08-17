@@ -23,6 +23,7 @@
 		"@tailwindcss/typography": "^0.5.16",
 		"@testing-library/jest-dom": "^6.7.0",
 		"@testing-library/svelte": "^5.2.8",
+		"@testing-library/user-event": "^14.6.1",
 		"@vitest/ui": "^3.2.4",
 		"autoprefixer": "^10.4.21",
 		"happy-dom": "^18.0.1",

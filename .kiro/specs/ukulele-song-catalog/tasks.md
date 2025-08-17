@@ -42,7 +42,7 @@
   - Test accessibility features and keyboard navigation
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.2_
 
-- [-] 7. Implement song list page with mobile-first layout
+- [x] 7. Implement song list page with mobile-first layout
   - Create /songs route that fetches song metadata from Supabase
   - Build SongList component with single-column mobile-first card layout
   - Implement loading states, error handling, and empty state display
@@ -50,7 +50,7 @@
   - Ensure container never exceeds TailwindCSS md breakpoint
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.3_
 
-- [ ] 8. Write tests for song list functionality
+- [-] 8. Write tests for song list functionality
   - Create integration tests for song list loading and navigation
   - Test loading states, error handling, and empty state scenarios
   - Verify mobile-first responsive layout behavior
