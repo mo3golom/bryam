@@ -21,14 +21,14 @@
   - Handle malformed ChordPro content gracefully without breaking interface
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [-] 4. Write tests for ChordPro parser
+- [x] 4. Write tests for ChordPro parser
   - Create unit tests for various ChordPro input formats and edge cases
   - Test chord pattern recognition and parsing accuracy
   - Verify graceful handling of malformed content
   - Test performance with large song content
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 5. Create SongViewer component with mobile-first design
+- [-] 5. Create SongViewer component with mobile-first design
   - Build SongViewer component that renders parsed ChordPro data
   - Implement mobile-optimized chord-to-lyric alignment within max-width md
   - Style with TailwindCSS using mobile-first approach and touch-friendly elements
