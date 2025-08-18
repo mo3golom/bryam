@@ -12,10 +12,6 @@
 
   $: song = data.song;
 
-  function goBackToList() {
-    goto('/songs');
-  }
-
   onMount(() => {
     // Initialize connectivity monitoring
     initializeConnectivityMonitoring();

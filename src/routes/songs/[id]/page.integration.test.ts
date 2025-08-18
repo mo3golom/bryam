@@ -82,7 +82,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       // Step 2: Verify song page content is displayed correctly
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
       
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toBeInTheDocument()
 
       // Step 3: Navigate back to song list
@@ -98,7 +98,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       render(SongPage, { props: { data: pageData } })
 
       // Step 2: Navigate back with keyboard
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       
       await user.tab()
       expect(backButton).toHaveFocus()
@@ -118,7 +118,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       const main = container.querySelector('main')
       expect(main).toBeInTheDocument()
       
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toHaveAccessibleName()
       expect(backButton).toHaveClass('focus:ring-2')
       expect(backButton).toHaveClass('focus:ring-blue-500')
@@ -154,10 +154,10 @@ describe('End-to-End User Journey Integration Tests', () => {
       expect(pageContainer).toBeInTheDocument()
       expect(pageContainer).toHaveClass('mx-auto')
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toHaveClass('touch-manipulation')
-      expect(backButton).toHaveClass('py-3')
-      expect(backButton).toHaveClass('px-4')
+      expect(backButton).toHaveClass('py-2')
+      expect(backButton).toHaveClass('px-3')
 
       // Test navigation works on mobile
       await user.click(backButton)
@@ -177,7 +177,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       }).not.toThrow()
 
       // Should still render back button for navigation
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toBeInTheDocument()
       
       await user.click(backButton)
@@ -198,7 +198,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Step 2: Measure navigation performance
       const navStartTime = performance.now()
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       await user.click(backButton)
       const navEndTime = performance.now()
       const navTime = navEndTime - navStartTime
@@ -214,7 +214,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       const pageData = { song: mockSong }
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       
       // Rapid clicks on back button
       await user.click(backButton)
@@ -237,7 +237,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
 
       // Navigate back
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       await user.click(backButton)
       expect(goto).toHaveBeenCalledWith('/songs')
 
@@ -253,7 +253,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       render(SongPage, { props: { data: pageData } })
 
       // Should immediately show content (no loading state needed)
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toBeInTheDocument()
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
     })
@@ -265,7 +265,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
       
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toBeInTheDocument()
     })
 
@@ -277,12 +277,12 @@ describe('End-to-End User Journey Integration Tests', () => {
       const { container } = render(SongPage, { props: { data: pageData } })
 
       // Verify mobile optimizations
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toHaveClass('touch-manipulation')
 
       // Check for minimal DOM structure
       const pageElements = container.querySelectorAll('*')
-      expect(pageElements.length).toBeLessThan(20) // Minimal DOM for performance
+      expect(pageElements.length).toBeLessThan(30) // Minimal DOM for performance
 
       // No external resources that could slow mobile loading
       expect(container.querySelectorAll('img, iframe, video')).toHaveLength(0)

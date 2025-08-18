@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/svelte'
+import { render, screen, fireEvent, cleanup } from '@testing-library/svelte'
 import userEvent from '@testing-library/user-event'
 import { goto } from '$app/navigation'
-import { error } from '@sveltejs/kit'
 import SongPage from './+page.svelte'
 import type { Song } from '$lib/types'
 
@@ -44,17 +43,17 @@ describe('Individual Song Page Integration Tests', () => {
   describe('Song page loading and ChordPro rendering', () => {
     it('should render song page with valid song data', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       // Check that the page title is set correctly
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
-      
+
       // Check that the back button is rendered
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toBeInTheDocument()
       expect(backButton).toHaveClass('touch-manipulation')
-      
+
       // Check that SongViewer component would be rendered with correct props
       // (We can't directly test the mocked component, but we can verify the data structure)
       expect(pageData.song).toEqual(mockSong)
@@ -62,11 +61,11 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should set correct meta tags for SEO', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
-      
+
       const metaDescription = document.querySelector('meta[name="description"]')
       expect(metaDescription?.getAttribute('content')).toBe(
         'Somewhere Over The Rainbow by Israel Kamakawiwoʻole - Ukulele chords and lyrics'
@@ -79,11 +78,11 @@ describe('Individual Song Page Integration Tests', () => {
         artist: null
       }
       const pageData = { song: songWithoutArtist }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toBe('Somewhere Over The Rainbow - Ukulele Song Catalog')
-      
+
       const metaDescription = document.querySelector('meta[name="description"]')
       expect(metaDescription?.getAttribute('content')).toBe(
         'Somewhere Over The Rainbow by Unknown artist - Ukulele chords and lyrics'
@@ -96,7 +95,7 @@ describe('Individual Song Page Integration Tests', () => {
         title: ''
       }
       const pageData = { song: songWithEmptyTitle }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toBe('- Ukulele Song Catalog')
@@ -104,7 +103,7 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should apply mobile-first layout constraints', () => {
       const pageData = { song: mockSong }
-      
+
       const { container } = render(SongPage, { props: { data: pageData } })
 
       const mainElement = container.querySelector('main')
@@ -120,16 +119,16 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should render back button with proper styling and accessibility', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Check styling classes
       expect(backButton).toHaveClass('inline-flex')
       expect(backButton).toHaveClass('items-center')
-      expect(backButton).toHaveClass('px-4')
-      expect(backButton).toHaveClass('py-3')
+      expect(backButton).toHaveClass('px-3')
+      expect(backButton).toHaveClass('py-2')
       expect(backButton).toHaveClass('text-sm')
       expect(backButton).toHaveClass('font-medium')
       expect(backButton).toHaveClass('text-gray-600')
@@ -146,8 +145,8 @@ describe('Individual Song Page Integration Tests', () => {
       const svgIcon = backButton.querySelector('svg')
       expect(svgIcon).toBeInTheDocument()
       expect(svgIcon).toHaveClass('mr-2')
-      expect(svgIcon).toHaveClass('h-4')
-      expect(svgIcon).toHaveClass('w-4')
+      expect(svgIcon).toHaveClass('h-5')
+      expect(svgIcon).toHaveClass('w-5')
     })
   })
 
@@ -155,10 +154,10 @@ describe('Individual Song Page Integration Tests', () => {
     it('should navigate back to songs list when back button is clicked', async () => {
       const user = userEvent.setup()
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       await user.click(backButton)
 
       expect(goto).toHaveBeenCalledWith('/songs')
@@ -167,11 +166,11 @@ describe('Individual Song Page Integration Tests', () => {
     it('should handle keyboard navigation on back button', async () => {
       const user = userEvent.setup()
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Test Enter key
       await user.type(backButton, '{Enter}')
       expect(goto).toHaveBeenCalledWith('/songs')
@@ -185,11 +184,11 @@ describe('Individual Song Page Integration Tests', () => {
     it('should maintain focus management for accessibility', async () => {
       const user = userEvent.setup()
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Test tab navigation
       await user.tab()
       expect(backButton).toHaveFocus()
@@ -199,12 +198,12 @@ describe('Individual Song Page Integration Tests', () => {
   describe('Mobile performance and loading state behavior', () => {
     it('should render efficiently with minimal DOM elements', () => {
       const pageData = { song: mockSong }
-      
+
       const { container } = render(SongPage, { props: { data: pageData } })
 
       // Check that the DOM structure is minimal and efficient
       const allElements = container.querySelectorAll('*')
-      expect(allElements.length).toBeLessThan(20) // Reasonable limit for performance
+      expect(allElements.length).toBeLessThan(30) // Reasonable limit for performance
 
       // Check for essential elements only
       expect(container.querySelector('main')).toBeInTheDocument()
@@ -214,20 +213,20 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should apply touch-friendly interface elements', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Check for touch optimization
       expect(backButton).toHaveClass('touch-manipulation')
-      expect(backButton).toHaveClass('py-3') // Adequate touch target height
-      expect(backButton).toHaveClass('px-4') // Adequate touch target width
+      expect(backButton).toHaveClass('py-2') // Adequate touch target height
+      expect(backButton).toHaveClass('px-3') // Adequate touch target width
     })
 
     it('should handle rapid re-renders without performance issues', () => {
       const pageData = { song: mockSong }
-      
+
       const { rerender } = render(SongPage, { props: { data: pageData } })
 
       // Simulate rapid data changes
@@ -242,7 +241,7 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should optimize for mobile network conditions', () => {
       const pageData = { song: mockSong }
-      
+
       const { container } = render(SongPage, { props: { data: pageData } })
 
       // Check that no unnecessary network requests are made
@@ -250,7 +249,7 @@ describe('Individual Song Page Integration Tests', () => {
       const images = container.querySelectorAll('img')
       const iframes = container.querySelectorAll('iframe')
       const videos = container.querySelectorAll('video')
-      
+
       expect(images.length).toBe(0) // No images that could slow loading
       expect(iframes.length).toBe(0) // No iframes
       expect(videos.length).toBe(0) // No videos
@@ -260,7 +259,7 @@ describe('Individual Song Page Integration Tests', () => {
   describe('Error handling and edge cases', () => {
     it('should handle missing song data gracefully', () => {
       const pageData = { song: null as any }
-      
+
       // This should not crash the component
       expect(() => {
         render(SongPage, { props: { data: pageData } })
@@ -269,7 +268,7 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should handle undefined song data', () => {
       const pageData = { song: undefined as any }
-      
+
       expect(() => {
         render(SongPage, { props: { data: pageData } })
       }).not.toThrow()
@@ -277,11 +276,11 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should set fallback meta tags when song is missing', () => {
       const pageData = { song: null as any }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toBe('Song - Ukulele Song Catalog')
-      
+
       const metaDescription = document.querySelector('meta[name="description"]')
       expect(metaDescription?.getAttribute('content')).toBe(
         'Ukulele song with chords and lyrics'
@@ -296,11 +295,11 @@ describe('Individual Song Page Integration Tests', () => {
         body: '[C]Content'
       }
       const pageData = { song: specialCharSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toBe('Song with "Quotes" & <Tags> - Ukulele Song Catalog')
-      
+
       const metaDescription = document.querySelector('meta[name="description"]')
       expect(metaDescription?.getAttribute('content')).toBe(
         'Song with "Quotes" & <Tags> by Artist & Co. "Special" - Ukulele chords and lyrics'
@@ -315,7 +314,7 @@ describe('Individual Song Page Integration Tests', () => {
         body: '[C]Content'
       }
       const pageData = { song: longTitleSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       expect(document.title).toContain('This is a very long song title')
@@ -330,7 +329,7 @@ describe('Individual Song Page Integration Tests', () => {
         body: ''
       }
       const pageData = { song: emptySong }
-      
+
       expect(() => {
         render(SongPage, { props: { data: pageData } })
       }).not.toThrow()
@@ -344,7 +343,7 @@ describe('Individual Song Page Integration Tests', () => {
         body: { invalid: 'object' } // Wrong type
       } as any
       const pageData = { song: malformedSong }
-      
+
       expect(() => {
         render(SongPage, { props: { data: pageData } })
       }).not.toThrow()
@@ -354,26 +353,26 @@ describe('Individual Song Page Integration Tests', () => {
   describe('Accessibility and semantic HTML', () => {
     it('should use proper semantic HTML structure', () => {
       const pageData = { song: mockSong }
-      
+
       const { container } = render(SongPage, { props: { data: pageData } })
 
       // Check for semantic elements
       expect(container.querySelector('main')).toBeInTheDocument()
       expect(container.querySelector('button')).toBeInTheDocument()
-      
+
       // Check for proper ARIA attributes
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       // Button elements have implicit role="button", so no need to check for explicit role attribute
       expect(backButton.tagName.toLowerCase()).toBe('button')
     })
 
     it('should provide proper focus indicators', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Check for focus styling
       expect(backButton).toHaveClass('focus:outline-none')
       expect(backButton).toHaveClass('focus:ring-2')
@@ -383,35 +382,35 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should support screen reader navigation', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
       // Check that all interactive elements have proper labels
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toHaveAccessibleName()
-      
+
       // Check that text content is accessible
-      expect(backButton.textContent).toContain('Back to Songs')
+      expect(backButton.textContent).toContain('Back')
     })
 
     it('should maintain proper heading hierarchy', () => {
       const pageData = { song: mockSong }
-      
+
       const { container } = render(SongPage, { props: { data: pageData } })
 
-      // The page itself doesn't have headings (they're in SongViewer)
-      // But it should not interfere with heading hierarchy
+      // The page has a heading in the Navigation component
+      // Check that the heading hierarchy is proper
       const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6')
-      expect(headings.length).toBe(0) // No headings in the page wrapper
+      expect(headings.length).toBe(1) // One h1 heading in the navigation
     })
 
     it('should provide high contrast for readability', () => {
       const pageData = { song: mockSong }
-      
+
       render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Check for high contrast text colors
       expect(backButton).toHaveClass('text-gray-600')
       expect(backButton).toHaveClass('hover:text-gray-900')
@@ -421,7 +420,7 @@ describe('Individual Song Page Integration Tests', () => {
   describe('Performance optimization', () => {
     it('should minimize re-renders with stable references', () => {
       const pageData = { song: mockSong }
-      
+
       const { rerender } = render(SongPage, { props: { data: pageData } })
 
       // Same data should not cause unnecessary re-renders
@@ -434,7 +433,7 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should handle component cleanup properly', () => {
       const pageData = { song: mockSong }
-      
+
       const { unmount } = render(SongPage, { props: { data: pageData } })
 
       // Should unmount without errors
@@ -443,14 +442,14 @@ describe('Individual Song Page Integration Tests', () => {
 
     it('should not create memory leaks with event listeners', () => {
       const pageData = { song: mockSong }
-      
+
       const { unmount } = render(SongPage, { props: { data: pageData } })
 
-      const backButton = screen.getByRole('button', { name: /back to songs/i })
-      
+      const backButton = screen.getByRole('button', { name: /go back to previous page/i })
+
       // Add some interactions
       fireEvent.click(backButton)
-      
+
       // Should clean up properly
       expect(() => unmount()).not.toThrow()
     })
