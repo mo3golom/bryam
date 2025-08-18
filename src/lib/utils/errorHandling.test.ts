@@ -200,7 +200,10 @@ describe('errorHandling utilities', () => {
         error: null
       });
       
-      await expect(executeSupabaseQuery(mockQuery, { timeout: 1000 })).rejects.toThrow('No data returned from query');
+      await expect(executeSupabaseQuery(mockQuery, { 
+        timeout: 1000,
+        maxAttempts: 1 // Don't retry for this test
+      })).rejects.toThrow('No data returned from query');
     });
 
     it('should respect timeout option', async () => {
