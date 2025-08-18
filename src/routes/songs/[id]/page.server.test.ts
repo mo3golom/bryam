@@ -14,7 +14,15 @@ vi.mock('$lib/supabaseClient', () => {
       }))
     }))
   }
-  return { supabase: mockSupabase }
+  
+  const mockSupabaseService = {
+    fetchSongById: vi.fn()
+  }
+  
+  return { 
+    supabase: mockSupabase,
+    supabaseService: mockSupabaseService
+  }
 })
 
 // Mock SvelteKit error function
@@ -35,92 +43,60 @@ describe('Individual Song Page Server Load Function', () => {
     body: '[C]Somewhere [Em]over the rainbow\n[F]Way up [C]high'
   }
 
-  let mockSupabase: any
+  let mockSupabaseService: any
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    // Get the mocked supabase instance
-    const { supabase } = await import('$lib/supabaseClient')
-    mockSupabase = supabase
+    // Get the mocked supabase service instance
+    const { supabaseService } = await import('$lib/supabaseClient')
+    mockSupabaseService = supabaseService
   })
 
   describe('Successful song loading', () => {
     it('should load song data successfully with valid ID', async () => {
-      const mockChain = {
-        single: vi.fn().mockResolvedValue({
-          data: mockSong,
-          error: null
-        })
-      }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue(mockChain)
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
 
       expect(result).toEqual({ song: mockSong })
-      expect(mockSupabase.from).toHaveBeenCalledWith('songs')
-      expect(mockChain.single).toHaveBeenCalled()
+      expect(mockSupabaseService.fetchSongById).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 5000
+      })
     })
 
     it('should query correct fields from database', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSong,
-            error: null
-          })
-        })
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: mockSelect
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       await load({ params } as any)
 
-      expect(mockSelect).toHaveBeenCalledWith('id, title, artist, body')
+      expect(mockSupabaseService.fetchSongById).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 5000
+      })
     })
 
     it('should filter by correct song ID', async () => {
-      const mockEq = vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: mockSong,
-          error: null
-        })
-      })
-
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: mockEq
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const songId = '123e4567-e89b-12d3-a456-426614174000'
       const params = { id: songId }
       await load({ params } as any)
 
-      expect(mockEq).toHaveBeenCalledWith('id', songId)
+      expect(mockSupabaseService.fetchSongById).toHaveBeenCalledWith(songId, {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 5000
+      })
     })
 
     it('should handle song with null artist', async () => {
       const songWithNullArtist = { ...mockSong, artist: null }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: songWithNullArtist,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(songWithNullArtist)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
@@ -130,17 +106,7 @@ describe('Individual Song Page Server Load Function', () => {
 
     it('should handle song with empty body', async () => {
       const songWithEmptyBody = { ...mockSong, body: '' }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: songWithEmptyBody,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(songWithEmptyBody)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
@@ -165,16 +131,8 @@ describe('Individual Song Page Server Load Function', () => {
     })
 
     it('should throw 404 error when song is not found (PGRST116)', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116', message: 'No rows returned' }
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: 'non-existent-id' }
 
@@ -183,16 +141,8 @@ describe('Individual Song Page Server Load Function', () => {
     })
 
     it('should throw 404 error when song data is null', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: null
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: 'valid-id-but-no-data' }
 
@@ -201,16 +151,8 @@ describe('Individual Song Page Server Load Function', () => {
     })
 
     it('should handle malformed UUID gracefully', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116', message: 'No rows returned' }
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: 'not-a-valid-uuid' }
 
@@ -221,81 +163,48 @@ describe('Individual Song Page Server Load Function', () => {
 
   describe('Database error handling', () => {
     it('should throw 500 error for database connection issues', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'CONNECTION_ERROR', message: 'Database connection failed' }
-            })
-          })
-        })
-      })
+      const dbError = { code: 'CONNECTION_ERROR', message: 'Database connection failed' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(dbError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
       await expect(load({ params } as any)).rejects.toThrow()
-      expect(error).toHaveBeenCalledWith(500, 'Failed to load song')
+      expect(error).toHaveBeenCalledWith(500, 'A database error occurred. Please try again later.')
     })
 
     it('should throw 500 error for authentication issues', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST301', message: 'JWT expired' }
-            })
-          })
-        })
-      })
+      const authError = { code: 'PGRST301', message: 'JWT expired' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(authError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
       await expect(load({ params } as any)).rejects.toThrow()
-      expect(error).toHaveBeenCalledWith(500, 'Failed to load song')
+      expect(error).toHaveBeenCalledWith(503, 'Service temporarily unavailable. Please try again later.')
     })
 
     it('should handle network timeouts', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockRejectedValue(new Error('Network timeout'))
-          })
-        })
-      })
+      const networkError = new Error('Network timeout')
+      mockSupabaseService.fetchSongById.mockRejectedValue(networkError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
       await expect(load({ params } as any)).rejects.toThrow()
-      expect(error).toHaveBeenCalledWith(500, 'Failed to load song')
+      expect(error).toHaveBeenCalledWith(500, 'Network timeout')
     })
 
     it('should handle unexpected errors gracefully', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockRejectedValue(new Error('Unexpected error'))
-          })
-        })
-      })
+      const unexpectedError = new Error('Unexpected error')
+      mockSupabaseService.fetchSongById.mockRejectedValue(unexpectedError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
       await expect(load({ params } as any)).rejects.toThrow()
-      expect(error).toHaveBeenCalledWith(500, 'Failed to load song')
+      expect(error).toHaveBeenCalledWith(500, 'Unexpected error')
     })
 
     it('should re-throw SvelteKit errors without modification', async () => {
       const svelteKitError = { status: 404, body: { message: 'Not found' } }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockRejectedValue(svelteKitError)
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockRejectedValue(svelteKitError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
@@ -304,22 +213,13 @@ describe('Individual Song Page Server Load Function', () => {
 
     it('should log errors for debugging', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'DB_ERROR', message: 'Database error' }
-            })
-          })
-        })
-      })
+      const dbError = { code: 'DB_ERROR', message: 'Database error' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(dbError)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
 
       await expect(load({ params } as any)).rejects.toThrow()
-      expect(consoleSpy).toHaveBeenCalledWith('Supabase error:', { code: 'DB_ERROR', message: 'Database error' })
+      expect(consoleSpy).toHaveBeenCalledWith('Error fetching song:', dbError)
       
       consoleSpy.mockRestore()
     })
@@ -328,17 +228,8 @@ describe('Individual Song Page Server Load Function', () => {
   describe('Edge cases and data validation', () => {
     it('should handle very long song IDs', async () => {
       const veryLongId = 'a'.repeat(1000)
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116', message: 'No rows returned' }
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: veryLongId }
 
@@ -348,17 +239,8 @@ describe('Individual Song Page Server Load Function', () => {
 
     it('should handle special characters in song ID', async () => {
       const specialCharId = 'song-id-with-special-chars-!@#$%^&*()'
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116', message: 'No rows returned' }
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: specialCharId }
 
@@ -368,17 +250,8 @@ describe('Individual Song Page Server Load Function', () => {
 
     it('should handle SQL injection attempts', async () => {
       const maliciousId = "'; DROP TABLE songs; --"
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116', message: 'No rows returned' }
-            })
-          })
-        })
-      })
+      const supabaseError = { code: 'PGRST116', message: 'No rows returned' }
+      mockSupabaseService.fetchSongById.mockRejectedValue(supabaseError)
 
       const params = { id: maliciousId }
 
@@ -392,17 +265,7 @@ describe('Individual Song Page Server Load Function', () => {
         ...mockSong,
         body: '[C]'.repeat(10000) + 'Very large song content'.repeat(1000)
       }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: largeBodySong,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(largeBodySong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
@@ -417,17 +280,7 @@ describe('Individual Song Page Server Load Function', () => {
         artist: 'Artist & Co. "Special"',
         body: '[C]Content with émojis 🎵 and special chars ñoñó'
       }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: specialCharSong,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(specialCharSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
@@ -436,16 +289,7 @@ describe('Individual Song Page Server Load Function', () => {
     })
 
     it('should handle concurrent requests efficiently', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockSong,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       
@@ -462,39 +306,18 @@ describe('Individual Song Page Server Load Function', () => {
 
   describe('Performance and optimization', () => {
     it('should make minimal database queries', async () => {
-      const mockSingle = vi.fn().mockResolvedValue({
-        data: mockSong,
-        error: null
-      })
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: mockSingle
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       await load({ params } as any)
 
       // Should only make one database call
-      expect(mockSingle).toHaveBeenCalledTimes(1)
+      expect(mockSupabaseService.fetchSongById).toHaveBeenCalledTimes(1)
     })
 
     it('should handle database response efficiently', async () => {
       const startTime = Date.now()
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockSong,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(mockSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       const result = await load({ params } as any)
@@ -511,17 +334,7 @@ describe('Individual Song Page Server Load Function', () => {
         ...mockSong,
         body: 'Large content '.repeat(10000)
       }
-      
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: largeSong,
-              error: null
-            })
-          })
-        })
-      })
+      mockSupabaseService.fetchSongById.mockResolvedValue(largeSong)
 
       const params = { id: '123e4567-e89b-12d3-a456-426614174000' }
       

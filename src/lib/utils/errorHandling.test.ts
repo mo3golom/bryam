@@ -56,6 +56,7 @@ describe('errorHandling utilities', () => {
       
       const promise = retryWithBackoff(mockFn, { maxAttempts: 2, baseDelay: 100 });
       
+      // Fast-forward all timers to complete the retries
       await vi.runAllTimersAsync();
       
       await expect(promise).rejects.toThrow('Network error');
@@ -160,7 +161,9 @@ describe('errorHandling utilities', () => {
     });
 
     it('should reject when timeout is reached', async () => {
-      const promise = new Promise(resolve => setTimeout(resolve, 2000));
+      const promise = new Promise((resolve) => {
+        setTimeout(() => resolve('too late'), 2000);
+      });
       
       const timeoutPromise = withTimeout(promise, 1000);
       
@@ -208,7 +211,9 @@ describe('errorHandling utilities', () => {
 
     it('should respect timeout option', async () => {
       const mockQuery = vi.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 2000))
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ data: 'too late', error: null }), 2000);
+        })
       );
       
       const promise = executeSupabaseQuery(mockQuery, { timeout: 1000 });
