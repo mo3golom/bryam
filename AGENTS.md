@@ -8,12 +8,18 @@ This Agents.md file provides comprehensive guidance for AI agentic developers wo
 - AGENT SHOULD use the latest version of any package. Before add any dependency check the version using Context7
 - AGENT HAVE TO add any dependency using "npm install ..." command
 - AGENT HAVE TO use DOMAIN DRIVEN DESIGN and TEST DRIVEN DEVELOPMENT approaches when implement new features
+- Define bounded contexts to separate different parts of the domain with clear boundaries
+- Implement ubiquitous language within each context to align code with business terminology
 - Agents.md requires meaningful variable and function names in AI agentic developer output
 - AGENT SHOULD add comments ONLY for complex logic as guided by Agents.md
 
 ### GIT
 - AGENT HAVE TO commit all changes after implement the task using "git add ." and "git commit -m" commands. 
 - AGENT SHOULD write meaningful commit messages that describe the changes made in the commit.
+
+#### DOC_UPDATES
+- Update relevant documentation in /docs when modifying features
+- Keep README.md in sync with new capabilities
 
 ### Svelte and SvelteKit
 - AGENT HAVE TO run "npm run check" when finished implement any task for checking and fixing errors

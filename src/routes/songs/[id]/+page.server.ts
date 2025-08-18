@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
-import { supabase } from '$lib/supabaseClient';
+import { supabaseService } from '$lib/supabaseClient';
+import { analyzeError } from '$lib/utils/errorHandling';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -10,25 +11,11 @@ export const load: PageServerLoad = async ({ params }) => {
   }
 
   try {
-    const { data: song, error: supabaseError } = await supabase
-      .from('songs')
-      .select('id, title, artist, body')
-      .eq('id', id)
-      .single();
-
-    if (supabaseError) {
-      if (supabaseError.code === 'PGRST116') {
-        // No rows returned - song not found
-        throw error(404, 'Song not found');
-      }
-      
-      console.error('Supabase error:', supabaseError);
-      throw error(500, 'Failed to load song');
-    }
-
-    if (!song) {
-      throw error(404, 'Song not found');
-    }
+    const song = await supabaseService.fetchSongById(id, {
+      maxAttempts: 3,
+      baseDelay: 1000,
+      maxDelay: 5000
+    });
 
     return {
       song
@@ -40,6 +27,26 @@ export const load: PageServerLoad = async ({ params }) => {
     }
     
     console.error('Error fetching song:', err);
-    throw error(500, 'Failed to load song');
+    
+    // Analyze the error to provide appropriate response
+    const errorInfo = analyzeError(err);
+    
+    // Handle specific error cases
+    if (err && typeof err === 'object' && 'code' in err) {
+      const supabaseError = err as { code: string };
+      
+      if (supabaseError.code === 'PGRST116') {
+        // No rows returned - song not found
+        throw error(404, 'Song not found');
+      }
+    }
+    
+    // For network errors, return 503 Service Unavailable
+    if (errorInfo.isNetworkError) {
+      throw error(503, 'Service temporarily unavailable. Please try again later.');
+    }
+    
+    // For other errors, return 500
+    throw error(500, errorInfo.message);
   }
 };

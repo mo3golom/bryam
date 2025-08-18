@@ -1,7 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { initializeConnectivityMonitoring } from '$lib/stores/errorStore';
   import type { PageData } from './$types';
   import SongViewer from '$lib/components/SongViewer.svelte';
+  import ErrorNotification from '$lib/components/ErrorNotification.svelte';
 
   export let data: PageData;
 
@@ -10,6 +13,11 @@
   function goBackToList() {
     goto('/songs');
   }
+
+  onMount(() => {
+    // Initialize connectivity monitoring
+    initializeConnectivityMonitoring();
+  });
 </script>
 
 <svelte:head>
@@ -36,3 +44,6 @@
     <SongViewer songData={song} />
   </div>
 </main>
+
+<!-- Global error notifications -->
+<ErrorNotification />

@@ -5,6 +5,7 @@
   export let songs: SongListItem[] = [];
   export let loading = false;
   export let error: string | null = null;
+  export let onRetry: (() => Promise<void>) | null = null;
 
   function navigateToSong(songId: string) {
     goto(`/songs/${songId}`);
@@ -14,6 +15,15 @@
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       navigateToSong(songId);
+    }
+  }
+
+  async function handleRetry() {
+    if (onRetry) {
+      await onRetry();
+    } else {
+      // Fallback to page reload
+      window.location.reload();
     }
   }
 </script>
@@ -33,8 +43,8 @@
       <div class="text-red-600 font-medium mb-2">Oops! Something went wrong</div>
       <p class="text-red-500 text-sm">{error}</p>
       <button 
-        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-        on:click={() => window.location.reload()}
+        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors touch-manipulation"
+        on:click={handleRetry}
       >
         Try Again
       </button>

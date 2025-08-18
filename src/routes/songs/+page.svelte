@@ -1,31 +1,68 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { supabase } from '$lib/supabaseClient';
+  import { supabaseService } from '$lib/supabaseClient';
+  import { analyzeError, isOnline } from '$lib/utils/errorHandling';
+  import { addError, initializeConnectivityMonitoring } from '$lib/stores/errorStore';
   import type { SongListItem } from '$lib/types';
   import SongList from '$lib/components/SongList.svelte';
+  import ErrorNotification from '$lib/components/ErrorNotification.svelte';
 
   let songs: SongListItem[] = [];
   let loading = true;
   let error: string | null = null;
+  let retryCount = 0;
 
-  onMount(async () => {
+  async function loadSongs() {
+    loading = true;
+    error = null;
+
+    // Check if user is online
+    if (!isOnline()) {
+      error = 'You are currently offline. Please check your internet connection and try again.';
+      loading = false;
+      return;
+    }
+
     try {
-      const { data, error: supabaseError } = await supabase
-        .from('songs')
-        .select('id, title, artist')
-        .order('title');
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      songs = data || [];
+      songs = await supabaseService.fetchSongs({
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 5000
+      });
+      
+      // Reset retry count on success
+      retryCount = 0;
     } catch (err) {
       console.error('Error fetching songs:', err);
-      error = 'Failed to load songs. Please try again later.';
+      
+      const errorInfo = analyzeError(err);
+      error = errorInfo.message;
+      
+      // Add global error notification for network issues
+      if (errorInfo.isNetworkError) {
+        addError(
+          'Network error while loading songs. Please check your connection.',
+          'error',
+          true
+        );
+      }
+      
+      retryCount++;
     } finally {
       loading = false;
     }
+  }
+
+  async function handleRetry() {
+    await loadSongs();
+  }
+
+  onMount(async () => {
+    // Initialize connectivity monitoring
+    initializeConnectivityMonitoring();
+    
+    // Load songs
+    await loadSongs();
   });
 </script>
 
@@ -41,6 +78,9 @@
       <p class="text-gray-600 text-center mt-2">Browse and play your favorite songs</p>
     </header>
 
-    <SongList {songs} {loading} {error} />
+    <SongList {songs} {loading} {error} onRetry={handleRetry} />
   </div>
 </main>
+
+<!-- Global error notifications -->
+<ErrorNotification />

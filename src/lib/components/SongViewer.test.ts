@@ -154,7 +154,8 @@ describe('SongViewer Component', () => {
       flushSync()
 
       expect(target.textContent).toContain('No content available for this song.')
-      expect(mockParseChordPro).toHaveBeenCalledWith('')
+      // parseChordPro should not be called for empty body
+      expect(mockParseChordPro).not.toHaveBeenCalled()
     })
 
     it('should handle malformed ChordPro content gracefully', () => {
@@ -605,10 +606,12 @@ describe('SongViewer Component', () => {
         throw new Error('Parser error')
       })
 
-      // Component should not crash when parser throws
-      expect(() => {
-        mount(SongViewer, { target, props: { songData } })
-      }).toThrow('Parser error')
+      // Component should not crash when parser throws, but should show error state
+      component = mount(SongViewer, { target, props: { songData } })
+      flushSync()
+      
+      expect(target.textContent).toContain('Unable to parse song content')
+      expect(target.textContent).toContain('[C]Content') // Should show raw content
     })
 
     it('should handle whitespace-only song body', () => {
