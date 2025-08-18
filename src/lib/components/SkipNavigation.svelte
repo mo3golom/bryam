@@ -1,14 +1,16 @@
 <script lang="ts">
   function skipToMain() {
-    const mainContent = document.getElementById('main-content');
+    const mainContent = document.getElementById("main-content");
     if (mainContent) {
       mainContent.focus();
-      mainContent.scrollIntoView();
+      if (typeof mainContent.scrollIntoView === "function") {
+        mainContent.scrollIntoView();
+      }
     }
   }
-  
+
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       skipToMain();
     }
