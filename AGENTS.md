@@ -12,6 +12,7 @@ This Agents.md file provides comprehensive guidance for AI agentic developers wo
 - Implement ubiquitous language within each context to align code with business terminology
 - Agents.md requires meaningful variable and function names in AI agentic developer output
 - AGENT SHOULD add comments ONLY for complex logic as guided by Agents.md
+- AGENT SHOULD favor elegant, maintainable solutions over verbose code. Assume understanding of language idioms and design patterns.
 
 ### GIT
 - AGENT HAVE TO commit all changes after implement the task using "git add ." and "git commit -m" commands. 
