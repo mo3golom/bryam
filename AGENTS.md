@@ -61,6 +61,7 @@ export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
 
 ## Unit tests
 
+- If the task EXPLICITLY DOES NOT SPECIFY creating tests, then tests DO NOT need to be created.
 - AGENT HAVE TO run "npm run test:run" when finished implement any task any ONLY when "npm run check" was successful.
 
 ### VITEST

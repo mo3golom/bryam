@@ -65,7 +65,7 @@ describe('SongViewer Component', () => {
       
       const artistElement = target.querySelector('p')
       expect(artistElement).toBeTruthy()
-      expect(artistElement?.textContent).toBe('Test Artist')
+      expect(artistElement?.textContent).toBe('by Test Artist')
       
       expect(mockParseChordPro).toHaveBeenCalledWith('[C]Hello [G]world')
     })
@@ -205,7 +205,7 @@ describe('SongViewer Component', () => {
       component = mount(SongViewer, { target, props: { songData } })
       flushSync()
 
-      const mainContainer = target.querySelector('div')
+      const mainContainer = target.querySelector('article')
       expect(mainContainer?.className).toContain('w-full')
       expect(mainContainer?.className).toContain('max-w-md')
       expect(mainContainer?.className).toContain('mx-auto')
@@ -366,9 +366,9 @@ describe('SongViewer Component', () => {
       const header = target.querySelector('header')
       expect(header).toBeTruthy()
 
-      // Check for main element
-      const main = target.querySelector('main')
-      expect(main).toBeTruthy()
+      // Check for section element (song content)
+      const section = target.querySelector('section')
+      expect(section).toBeTruthy()
     })
 
     it('should provide meaningful text content for screen readers', () => {
@@ -539,9 +539,9 @@ describe('SongViewer Component', () => {
 
       // Verify proper document structure for screen readers
       const header = target.querySelector('header')
-      const main = target.querySelector('main')
+      const section = target.querySelector('section')
       expect(header).toBeTruthy()
-      expect(main).toBeTruthy()
+      expect(section).toBeTruthy()
     })
   })
 

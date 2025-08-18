@@ -43,8 +43,9 @@
       <div class="text-red-600 font-medium mb-2">Oops! Something went wrong</div>
       <p class="text-red-500 text-sm">{error}</p>
       <button 
-        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors touch-manipulation"
+        class="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors touch-manipulation min-h-[44px]"
         on:click={handleRetry}
+        aria-label="Retry loading songs"
       >
         Try Again
       </button>
@@ -63,11 +64,12 @@
     <div class="space-y-3">
       {#each songs as song (song.id)}
         <div
-          class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 transition-all duration-200 touch-manipulation"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 touch-manipulation min-h-[60px]"
           role="button"
           tabindex="0"
           on:click={() => navigateToSong(song.id)}
           on:keydown={(e) => handleKeydown(e, song.id)}
+          aria-label={`View song: ${song.title}${song.artist ? ` by ${song.artist}` : ''}`}
         >
           <div class="flex items-start justify-between">
             <div class="flex-1 min-w-0">

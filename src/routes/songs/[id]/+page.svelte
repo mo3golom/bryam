@@ -5,6 +5,8 @@
   import type { PageData } from './$types';
   import SongViewer from '$lib/components/SongViewer.svelte';
   import ErrorNotification from '$lib/components/ErrorNotification.svelte';
+  import Navigation from '$lib/components/Navigation.svelte';
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 
   export let data: PageData;
 
@@ -25,20 +27,19 @@
   <meta name="description" content={song ? `${song.title} by ${song.artist || 'Unknown artist'} - Ukulele chords and lyrics` : 'Ukulele song with chords and lyrics'} />
 </svelte:head>
 
-<main class="min-h-screen bg-gray-50 py-4 px-4">
+<Navigation 
+  showBackButton={true} 
+  backUrl="/songs" 
+  title={song ? song.title : 'Song'} 
+/>
+
+<main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
   <div class="max-w-md mx-auto">
-    <!-- Back button -->
-    <div class="mb-4">
-      <button
-        class="inline-flex items-center px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md transition-colors touch-manipulation"
-        on:click={goBackToList}
-      >
-        <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Songs
-      </button>
-    </div>
+    <Breadcrumb items={[
+      { label: 'Home', href: '/' },
+      { label: 'Songs', href: '/songs' },
+      { label: song ? song.title : 'Song', current: true }
+    ]} />
 
     <!-- Song content -->
     <SongViewer songData={song} />

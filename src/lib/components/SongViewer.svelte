@@ -36,35 +36,35 @@
   }
 </script>
 
-<div class="w-full max-w-md mx-auto bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-6">
+<article class="w-full max-w-md mx-auto bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-6" role="main" aria-labelledby="song-title">
   <!-- Song Header -->
   <header class="mb-6 text-center">
-    <h1 class="text-2xl font-bold text-gray-900 mb-2 leading-tight">
+    <h1 id="song-title" class="text-2xl font-bold text-gray-900 mb-2 leading-tight">
       {songData.title}
     </h1>
     {#if songData.artist}
-      <p class="text-lg text-gray-600 font-medium">
-        {songData.artist}
+      <p class="text-lg text-gray-600 font-medium" aria-label="Artist">
+        by {songData.artist}
       </p>
     {/if}
   </header>
 
   <!-- Song Content -->
-  <main class="song-content">
+  <section class="song-content" aria-label="Song lyrics and chords">
     {#if parseError}
-      <div class="text-center py-8">
-        <div class="text-yellow-600 mb-4">
+      <div class="text-center py-8" role="alert" aria-live="polite">
+        <div class="text-yellow-600 mb-4" aria-hidden="true">
           <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
         <p class="text-gray-700 text-lg mb-4">Unable to parse song content</p>
         <div class="bg-gray-100 rounded-lg p-4 text-left">
-          <pre class="text-sm text-gray-800 whitespace-pre-wrap">{songData.body}</pre>
+          <pre class="text-sm text-gray-800 whitespace-pre-wrap" aria-label="Raw song content">{songData.body}</pre>
         </div>
       </div>
     {:else if !hasContent}
-      <div class="text-center py-8">
+      <div class="text-center py-8" role="status" aria-live="polite">
         <p class="text-gray-500 text-lg">No content available for this song.</p>
       </div>
     {:else}
@@ -79,11 +79,11 @@
                 {#each line.parts as part}
                   <div class="chord-word-pair inline-block">
                     {#if part.chord}
-                      <div class="chord text-blue-600 font-semibold text-sm leading-none mb-1 min-h-[1rem]">
+                      <div class="chord text-blue-600 font-semibold text-sm leading-none mb-1 min-h-[1rem]" aria-label="Chord: {part.chord}">
                         {part.chord}
                       </div>
                     {:else}
-                      <div class="chord-spacer min-h-[1rem] mb-1"></div>
+                      <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
                     {/if}
                     <div class="word text-gray-900 text-base leading-tight">
                       {part.word}
@@ -96,8 +96,8 @@
         {/each}
       </div>
     {/if}
-  </main>
-</div>
+  </section>
+</article>
 
 <style>
   .song-content {

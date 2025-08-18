@@ -260,8 +260,8 @@ describe('SongList Component', () => {
       songCards.forEach(card => {
         expect(card).toHaveClass('hover:shadow-md');
         expect(card).toHaveClass('hover:border-gray-300');
-        expect(card).toHaveClass('focus-within:ring-2');
-        expect(card).toHaveClass('focus-within:ring-blue-500');
+        expect(card).toHaveClass('focus:ring-2');
+        expect(card).toHaveClass('focus:ring-blue-500');
       });
     });
   });
@@ -319,7 +319,7 @@ describe('SongList Component', () => {
         props: { songs: [], loading: false, error: 'Connection failed' } 
       });
       
-      const retryButton = screen.getByRole('button', { name: 'Try Again' });
+      const retryButton = screen.getByRole('button', { name: 'Retry loading songs' });
       expect(retryButton).toBeInTheDocument();
       expect(retryButton).toHaveClass('focus:outline-none');
       expect(retryButton).toHaveClass('focus:ring-2');

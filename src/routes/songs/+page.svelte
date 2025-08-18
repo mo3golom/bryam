@@ -6,6 +6,8 @@
   import type { SongListItem } from '$lib/types';
   import SongList from '$lib/components/SongList.svelte';
   import ErrorNotification from '$lib/components/ErrorNotification.svelte';
+  import Navigation from '$lib/components/Navigation.svelte';
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 
   let songs: SongListItem[] = [];
   let loading = true;
@@ -71,8 +73,15 @@
   <meta name="description" content="Browse our collection of ukulele songs with chords and lyrics" />
 </svelte:head>
 
-<main class="min-h-screen bg-gray-50 py-4 px-4">
+<Navigation title="Songs" />
+
+<main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
   <div class="max-w-md mx-auto">
+    <Breadcrumb items={[
+      { label: 'Home', href: '/' },
+      { label: 'Songs', current: true }
+    ]} />
+    
     <header class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900 text-center">Ukulele Songs</h1>
       <p class="text-gray-600 text-center mt-2">Browse and play your favorite songs</p>
