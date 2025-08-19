@@ -1,7 +1,6 @@
 # Stage 1: Build the SvelteKit frontend
 FROM node:24.4-alpine AS frontend-builder
 
-ENV PUBLIC_API_BASE_URL=""
 WORKDIR /app
 
 # Copy package files and install dependencies
