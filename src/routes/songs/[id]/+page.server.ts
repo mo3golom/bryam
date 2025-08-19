@@ -1,7 +1,9 @@
 import { error } from '@sveltejs/kit';
-import { supabaseService } from '$lib/supabaseClient';
+import { supabaseService } from '$lib/server/supabaseClient';
 import { analyzeError } from '$lib/utils/errorHandling';
 import type { PageServerLoad } from './$types';
+
+export const prerender = false;
 
 export const load: PageServerLoad = async ({ params }) => {
   const { id } = params;

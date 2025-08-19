@@ -4,7 +4,7 @@ import { load } from './+page.server'
 import type { Song } from '$lib/types'
 
 // Mock Supabase client
-vi.mock('$lib/supabaseClient', () => {
+vi.mock('$lib/server/supabaseClient', () => {
   const mockSupabase = {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -48,7 +48,7 @@ describe('Individual Song Page Server Load Function', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     // Get the mocked supabase service instance
-    const { supabaseService } = await import('$lib/supabaseClient')
+    const { supabaseService } = await import('$lib/server/supabaseClient')
     mockSupabaseService = supabaseService
   })
 

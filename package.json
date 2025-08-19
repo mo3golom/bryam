@@ -16,7 +16,6 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.0.0",
-		"@sveltejs/adapter-static": "^3.0.9",
 		"@sveltejs/kit": "^2.22.0",
 		"@sveltejs/vite-plugin-svelte": "^6.0.0",
 		"@tailwindcss/postcss": "^4.1.12",
@@ -38,6 +37,7 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.55.0",
+		"@sveltejs/adapter-node": "^5.3.1",
 		"bits-ui": "^2.9.3"
 	}
 }
