@@ -1,71 +1,22 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { supabaseService } from '$lib/supabaseClient';
-  import { analyzeError, isOnline } from '$lib/utils/errorHandling';
-  import { addError, initializeConnectivityMonitoring } from '$lib/stores/errorStore';
-  import type { SongListItem } from '$lib/types';
+  import type { PageData } from './$types';
   import SongList from '$lib/components/SongList.svelte';
   import ErrorNotification from '$lib/components/ErrorNotification.svelte';
   import Navigation from '$lib/components/Navigation.svelte';
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 
-  let songs: SongListItem[] = [];
-  let loading = true;
-  let error: string | null = null;
-  let retryCount = 0;
+  export let data: PageData;
 
-  async function loadSongs() {
-    loading = true;
-    error = null;
+  $: songs = data.songs || [];
+  $: error = data.error || null;
 
-    // Check if user is online
-    if (!isOnline()) {
-      error = 'You are currently offline. Please check your internet connection and try again.';
-      loading = false;
-      return;
-    }
-
-    try {
-      songs = await supabaseService.fetchSongs({
-        maxAttempts: 3,
-        baseDelay: 1000,
-        maxDelay: 5000
-      });
-      
-      // Reset retry count on success
-      retryCount = 0;
-    } catch (err) {
-      console.error('Error fetching songs:', err);
-      
-      const errorInfo = analyzeError(err);
-      error = errorInfo.message;
-      
-      // Add global error notification for network issues
-      if (errorInfo.isNetworkError) {
-        addError(
-          'Network error while loading songs. Please check your connection.',
-          'error',
-          true
-        );
-      }
-      
-      retryCount++;
-    } finally {
-      loading = false;
-    }
-  }
+  // No need for loading state, as data is pre-fetched
+  const loading = false;
 
   async function handleRetry() {
-    await loadSongs();
+    // A full page reload is the simplest way to retry a server load
+    location.reload();
   }
-
-  onMount(async () => {
-    // Initialize connectivity monitoring
-    initializeConnectivityMonitoring();
-    
-    // Load songs
-    await loadSongs();
-  });
 </script>
 
 <svelte:head>

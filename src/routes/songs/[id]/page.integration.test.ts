@@ -11,7 +11,7 @@ vi.mock('$app/navigation', () => ({
 }))
 
 // Mock Supabase (not needed for these tests but imported by components)
-vi.mock('$lib/supabaseClient', () => ({
+vi.mock('$lib/server/supabaseClient', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
