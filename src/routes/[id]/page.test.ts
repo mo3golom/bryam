@@ -160,7 +160,7 @@ describe('Individual Song Page Integration Tests', () => {
       const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       await user.click(backButton)
 
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should handle keyboard navigation on back button', async () => {
@@ -173,12 +173,12 @@ describe('Individual Song Page Integration Tests', () => {
 
       // Test Enter key
       await user.type(backButton, '{Enter}')
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
 
       // Test Space key
       vi.clearAllMocks()
       await user.type(backButton, ' ')
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should maintain focus management for accessibility', async () => {

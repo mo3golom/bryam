@@ -18,8 +18,7 @@
   // Determine current page context for navigation
   const currentPath = $derived($page.url.pathname);
   const isHomePage = $derived(currentPath === '/');
-  const isSongsPage = $derived(currentPath === '/songs');
-  const isSongDetailPage = $derived(currentPath.startsWith('/songs/') && currentPath !== '/songs');
+  const isSongDetailPage = $derived(currentPath.match(/^\/[^\/]+$/) && currentPath !== '/');
 </script>
 
 <nav class="bg-white border-b border-gray-200 sticky top-0 z-50" aria-label="Main navigation">
@@ -38,7 +37,7 @@
           </svg>
           <span class="sr-only sm:not-sr-only">Back</span>
         </button>
-      {:else}
+      {:else if !isHomePage}
         <a
           href="/"
           class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md transition-colors touch-manipulation min-h-[44px]"
@@ -49,6 +48,9 @@
           </svg>
           <span class="sr-only sm:not-sr-only">Home</span>
         </a>
+      {:else}
+        <!-- Empty space when on home page -->
+        <div class="min-h-[44px] min-w-[44px]"></div>
       {/if}
       
       <!-- Page title -->
@@ -57,8 +59,6 @@
           <h1 class="text-lg font-semibold text-gray-900 truncate px-4">{title}</h1>
         {:else if isSongDetailPage}
           <h1 class="text-lg font-semibold text-gray-900 truncate px-4">Song Details</h1>
-        {:else if isSongsPage}
-          <h1 class="text-lg font-semibold text-gray-900 truncate px-4">Songs</h1>
         {:else}
           <h1 class="text-lg font-semibold text-gray-900 truncate px-4">Ukulele Catalog</h1>
         {/if}
@@ -66,9 +66,9 @@
       
       <!-- Right side actions -->
       <div class="flex items-center space-x-2">
-        {#if !isSongsPage && !isHomePage}
+        {#if isSongDetailPage}
           <a
-            href="/songs"
+            href="/"
             class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md transition-colors touch-manipulation min-h-[44px]"
             aria-label="Browse all songs"
           >

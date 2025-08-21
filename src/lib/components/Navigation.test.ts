@@ -71,7 +71,10 @@ describe('Navigation Component', () => {
       expect(container?.className).toContain('px-4')
     })
 
-    it('should display home link when not showing back button', () => {
+    it('should display home link when not showing back button and not on home page', () => {
+      // Set to a non-home page
+      currentMockPage = createMockPage('/123')
+      
       component = mount(Navigation, { target, props: { showBackButton: false } })
       flushSync()
 
@@ -82,6 +85,9 @@ describe('Navigation Component', () => {
       // Should have touch-friendly minimum dimensions
       expect(homeLink?.className).toContain('min-h-[44px]')
       expect(homeLink?.className).toContain('touch-manipulation')
+      
+      // Reset to home page for other tests
+      currentMockPage = createMockPage('/')
     })
 
     it('should display back button when showBackButton is true', () => {
@@ -89,7 +95,7 @@ describe('Navigation Component', () => {
         target, 
         props: { 
           showBackButton: true, 
-          backUrl: '/songs' 
+          backUrl: '/' 
         } 
       })
       flushSync()
@@ -104,38 +110,38 @@ describe('Navigation Component', () => {
       expect(backButton?.className).toContain('touch-manipulation')
     })
 
-    it('should display songs link when not on songs or home page', () => {
+    it('should display songs link when on song detail page', () => {
       // Mock being on a song detail page
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
 
-      const songsLink = target.querySelector('a[href="/songs"]')
-      expect(songsLink).toBeTruthy()
-      expect(songsLink?.getAttribute('aria-label')).toBe('Browse all songs')
-      expect(songsLink?.className).toContain('min-h-[44px]')
-      expect(songsLink?.className).toContain('touch-manipulation')
+      const homeLink = target.querySelector('a[href="/"]')
+      expect(homeLink).toBeTruthy()
+      expect(homeLink?.getAttribute('aria-label')).toBe('Go to home page')
+      expect(homeLink?.className).toContain('min-h-[44px]')
+      expect(homeLink?.className).toContain('touch-manipulation')
     })
 
-    it('should not display songs link when on songs page', () => {
-      currentMockPage = createMockPage('/songs')
-      
-      component = mount(Navigation, { target, props: {} })
-      flushSync()
-
-      const songsLink = target.querySelector('a[href="/songs"]')
-      expect(songsLink).toBeFalsy()
-    })
-
-    it('should not display songs link when on home page', () => {
+    it('should not display home link when on home page', () => {
       currentMockPage = createMockPage('/')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
 
-      const songsLink = target.querySelector('a[href="/songs"]')
-      expect(songsLink).toBeFalsy()
+      const homeLink = target.querySelector('a[href="/"]')
+      expect(homeLink).toBeFalsy()
+    })
+
+    it('should not display home link when on home page', () => {
+      currentMockPage = createMockPage('/')
+      
+      component = mount(Navigation, { target, props: {} })
+      flushSync()
+
+      const homeLink = target.querySelector('a[href="/"]')
+      expect(homeLink).toBeFalsy()
     })
 
     it('should apply sticky positioning for mobile scrolling', () => {
@@ -159,16 +165,16 @@ describe('Navigation Component', () => {
 
       // Test songs page title
       unmount(component)
-      currentMockPage = createMockPage('/songs')
+      currentMockPage = createMockPage('/')
       component = mount(Navigation, { target, props: {} })
       flushSync()
       
       titleElement = target.querySelector('h1')
-      expect(titleElement?.textContent).toBe('Songs')
+      expect(titleElement?.textContent).toBe('Ukulele Catalog')
 
       // Test song detail page title
       unmount(component)
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       component = mount(Navigation, { target, props: {} })
       flushSync()
       
@@ -207,7 +213,7 @@ describe('Navigation Component', () => {
         target, 
         props: { 
           showBackButton: true, 
-          backUrl: '/songs' 
+          backUrl: '/' 
         } 
       })
       flushSync()
@@ -218,13 +224,13 @@ describe('Navigation Component', () => {
       // Test Enter key
       const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
       backButton?.dispatchEvent(enterEvent)
-      expect(mockGoto).toHaveBeenCalledWith('/songs')
+      expect(mockGoto).toHaveBeenCalledWith('/')
 
       // Test Space key
       mockGoto.mockClear()
       const spaceEvent = new KeyboardEvent('keydown', { key: ' ', bubbles: true })
       backButton?.dispatchEvent(spaceEvent)
-      expect(mockGoto).toHaveBeenCalledWith('/songs')
+      expect(mockGoto).toHaveBeenCalledWith('/')
 
       // Test other keys (should not trigger navigation)
       mockGoto.mockClear()
@@ -265,7 +271,7 @@ describe('Navigation Component', () => {
         target, 
         props: { 
           showBackButton: true, 
-          backUrl: '/songs' 
+          backUrl: '/' 
         } 
       })
       flushSync()
@@ -306,7 +312,7 @@ describe('Navigation Component', () => {
         target, 
         props: { 
           showBackButton: true, 
-          backUrl: '/songs' 
+          backUrl: '/' 
         } 
       })
       flushSync()
@@ -355,7 +361,7 @@ describe('Navigation Component', () => {
     })
 
     it('should have proper spacing for touch targets', () => {
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
@@ -417,16 +423,13 @@ describe('Navigation Component', () => {
     })
 
     it('should provide meaningful link text and button labels', () => {
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
 
       const homeLink = target.querySelector('a[href="/"]')
       expect(homeLink?.getAttribute('aria-label')).toBe('Go to home page')
-
-      const songsLink = target.querySelector('a[href="/songs"]')
-      expect(songsLink?.getAttribute('aria-label')).toBe('Browse all songs')
     })
 
     it('should have proper color contrast for accessibility', () => {
@@ -445,7 +448,7 @@ describe('Navigation Component', () => {
     })
 
     it('should support keyboard navigation flow', () => {
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
@@ -461,7 +464,7 @@ describe('Navigation Component', () => {
     })
 
     it('should maintain logical tab order', () => {
-      currentMockPage = createMockPage('/songs/123')
+      currentMockPage = createMockPage('/123')
       
       component = mount(Navigation, { target, props: {} })
       flushSync()
@@ -477,7 +480,7 @@ describe('Navigation Component', () => {
       
       // Second element should be songs link
       const secondElement = focusableElements[1]
-      expect(secondElement.getAttribute('href')).toBe('/songs')
+      expect(secondElement.getAttribute('href')).toBe('/')
     })
 
     it('should provide context for screen reader users', () => {
@@ -515,12 +518,12 @@ describe('Navigation Component', () => {
 
       // Update to songs page
       unmount(component)
-      currentMockPage = createMockPage('/songs')
+      currentMockPage = createMockPage('/')
       component = mount(Navigation, { target, props: {} })
       flushSync()
 
       title = target.querySelector('h1')
-      expect(title?.textContent).toBe('Songs')
+      expect(title?.textContent).toBe('Ukulele Catalog')
 
       // Title should still be properly structured
       expect(title?.tagName).toBe('H1')
@@ -531,7 +534,7 @@ describe('Navigation Component', () => {
         target, 
         props: { 
           showBackButton: true, 
-          backUrl: '/songs' 
+          backUrl: '/' 
         } 
       })
       flushSync()
@@ -543,12 +546,16 @@ describe('Navigation Component', () => {
 
       // Home link should have screen reader text
       unmount(component)
+      currentMockPage = createMockPage('/123') // Set to non-home page
       component = mount(Navigation, { target, props: {} })
       flushSync()
 
       const homeLink = target.querySelector('a[href="/"]')
       const homeSrText = homeLink?.querySelector('.sr-only')
       expect(homeSrText?.textContent).toBe('Home')
+      
+      // Reset to home page
+      currentMockPage = createMockPage('/')
     })
   })
 
@@ -597,7 +604,7 @@ describe('Navigation Component', () => {
     })
 
     it('should handle very long URLs in backUrl', () => {
-      const longUrl = '/songs/very-long-song-id-that-might-cause-issues-with-navigation-handling'
+      const longUrl = '//very-long-song-id-that-might-cause-issues-with-navigation-handling'
       component = mount(Navigation, { 
         target, 
         props: { 
@@ -623,7 +630,7 @@ describe('Navigation Component', () => {
 
       // Update to show back button (remount for Svelte 5 compatibility)
       unmount(component)
-      component = mount(Navigation, { target, props: { showBackButton: true, backUrl: '/songs' } })
+      component = mount(Navigation, { target, props: { showBackButton: true, backUrl: '/' } })
       flushSync()
 
       nav = target.querySelector('nav')

@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
 
   function goBackToList() {
-    goto('/songs');
+    goto('/');
   }
 
   function retry() {

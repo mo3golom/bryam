@@ -1,49 +1,43 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import type { PageData } from './$types';
+  import SongList from '$lib/components/SongList.svelte';
+  import ErrorNotification from '$lib/components/ErrorNotification.svelte';
   import Navigation from '$lib/components/Navigation.svelte';
 
-  function navigateToSongs() {
-    goto('/songs');
-  }
-  
-  function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      navigateToSongs();
-    }
+  export let data: PageData;
+
+  $: songs = data.songs || [];
+  $: error = data.error || null;
+
+  // No need for loading state, as data is pre-fetched
+  const loading = false;
+
+  async function handleRetry() {
+    // A full page reload is the simplest way to retry a server load
+    location.reload();
   }
 </script>
 
 <svelte:head>
   <title>Ukulele Song Catalog</title>
-  <meta name="description" content="A collection of ukulele songs with chords and lyrics" />
+  <meta name="description" content="Browse our collection of ukulele songs with chords and lyrics" />
 </svelte:head>
 
 <Navigation title="Ukulele Catalog" />
 
-<main id="main-content" class="min-h-screen bg-gray-50 flex items-center justify-center px-4 pt-16" tabindex="-1">
-  <div class="max-w-md mx-auto text-center">
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+<main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
+  <div class="max-w-md mx-auto">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 text-center">
         <span role="img" aria-label="Musical note">🎵</span> 
-        Ukulele Song Catalog
+        Ukulele Songs
       </h1>
-      <p class="text-lg text-gray-600 mb-8">
-        Discover and play your favorite songs with chords and lyrics optimized for ukulele.
-      </p>
-    </div>
+      <p class="text-gray-600 text-center mt-2">Browse and play your favorite songs</p>
+    </header>
 
-    <button
-      class="w-full bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg touch-manipulation min-h-[48px]"
-      on:click={navigateToSongs}
-      on:keydown={handleKeydown}
-      aria-describedby="browse-description"
-    >
-      Browse Songs
-    </button>
-
-    <div id="browse-description" class="mt-6 text-sm text-gray-500">
-      <p>Mobile-optimized for playing on the go</p>
-    </div>
+    <SongList {songs} {loading} {error} onRetry={handleRetry} />
   </div>
 </main>
+
+<!-- Global error notifications -->
+<ErrorNotification />

@@ -28,7 +28,7 @@ export const supabaseService = {
     return executeSupabaseQuery(
       async () => {
         const result = await supabaseClient
-          .from('songs')
+          .from('bryam_songs')
           .select('id, title, artist')
           .order('title');
         return result;
@@ -44,7 +44,7 @@ export const supabaseService = {
     return executeSupabaseQuery(
       async () => {
         const result = await supabaseClient
-          .from('songs')
+          .from('bryam_songs')
           .select('id, title, artist, body')
           .eq('id', id)
           .single();
@@ -60,7 +60,7 @@ export const supabaseService = {
   async testConnection(): Promise<boolean> {
     try {
       const { error } = await supabaseClient
-        .from('songs')
+        .from('bryam_songs')
         .select('id')
         .limit(1);
       

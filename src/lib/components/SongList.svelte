@@ -8,7 +8,7 @@
   export let onRetry: (() => Promise<void>) | null = null;
 
   function navigateToSong(songId: string) {
-    goto(`/songs/${songId}`);
+    goto(`/${songId}`);
   }
 
   function handleKeydown(event: KeyboardEvent, songId: string) {

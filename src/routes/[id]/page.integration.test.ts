@@ -87,7 +87,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Step 3: Navigate back to song list
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should handle keyboard navigation on song page', async () => {
@@ -104,7 +104,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       expect(backButton).toHaveFocus()
       
       await user.keyboard('{Enter}')
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should maintain accessibility on song page', async () => {
@@ -133,7 +133,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Test navigation accessibility
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should handle mobile-first responsive behavior on song page', async () => {
@@ -161,7 +161,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Test navigation works on mobile
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should handle error states gracefully in the user journey', async () => {
@@ -181,7 +181,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       expect(backButton).toBeInTheDocument()
       
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should maintain performance on song page', async () => {
@@ -204,7 +204,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       const navTime = navEndTime - navStartTime
 
       expect(navTime).toBeLessThan(50) // Navigation should be instant
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should handle rapid navigation on song page without issues', async () => {
@@ -223,7 +223,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Should handle rapid clicks gracefully
       expect(goto).toHaveBeenCalledTimes(3)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
 
     it('should support navigation flow simulation', async () => {
@@ -239,7 +239,7 @@ describe('End-to-End User Journey Integration Tests', () => {
       // Navigate back
       const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
 
       // This simulates the navigation flow that would happen in a real app
       // The actual routing would be handled by SvelteKit
@@ -289,7 +289,7 @@ describe('End-to-End User Journey Integration Tests', () => {
 
       // Test navigation works efficiently
       await user.click(backButton)
-      expect(goto).toHaveBeenCalledWith('/songs')
+      expect(goto).toHaveBeenCalledWith('/')
     })
   })
 })

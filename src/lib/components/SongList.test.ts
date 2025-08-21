@@ -70,7 +70,7 @@ describe('SongList Component', () => {
     expect(songCards).toHaveLength(3);
     
     await fireEvent.click(songCards[0]);
-    expect(goto).toHaveBeenCalledWith('/songs/1');
+    expect(goto).toHaveBeenCalledWith('/1');
   });
 
   it('handles keyboard navigation', async () => {
@@ -82,12 +82,12 @@ describe('SongList Component', () => {
     
     // Test Enter key
     await fireEvent.keyDown(firstSong, { key: 'Enter' });
-    expect(goto).toHaveBeenCalledWith('/songs/1');
+    expect(goto).toHaveBeenCalledWith('/1');
     
     // Test Space key
     vi.clearAllMocks();
     await fireEvent.keyDown(firstSong, { key: ' ' });
-    expect(goto).toHaveBeenCalledWith('/songs/1');
+    expect(goto).toHaveBeenCalledWith('/1');
   });
 
   it('ignores other keyboard keys', async () => {
@@ -208,7 +208,7 @@ describe('SongList Component', () => {
       // Test navigation works
       const { goto } = await import('$app/navigation');
       await fireEvent.click(songCards[0]);
-      expect(goto).toHaveBeenCalledWith('/songs/1');
+      expect(goto).toHaveBeenCalledWith('/1');
     });
   });
 
@@ -291,7 +291,7 @@ describe('SongList Component', () => {
       // Test Enter key activation
       const { goto } = await import('$app/navigation');
       await user.keyboard('{Enter}');
-      expect(goto).toHaveBeenCalledWith('/songs/1');
+      expect(goto).toHaveBeenCalledWith('/1');
     });
 
     it('handles touch events properly', async () => {
@@ -304,7 +304,7 @@ describe('SongList Component', () => {
       // Test click/touch activation
       const { goto } = await import('$app/navigation');
       await user.click(firstCard);
-      expect(goto).toHaveBeenCalledWith('/songs/1');
+      expect(goto).toHaveBeenCalledWith('/1');
     });
 
     it('provides accessible error state with retry functionality', async () => {

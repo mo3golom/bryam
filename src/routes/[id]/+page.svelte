@@ -6,7 +6,6 @@
   import SongViewer from '$lib/components/SongViewer.svelte';
   import ErrorNotification from '$lib/components/ErrorNotification.svelte';
   import Navigation from '$lib/components/Navigation.svelte';
-  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 
   export let data: PageData;
 
@@ -25,18 +24,12 @@
 
 <Navigation 
   showBackButton={true} 
-  backUrl="/songs" 
+  backUrl="/" 
   title={song ? song.title : 'Song'} 
 />
 
 <main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
   <div class="max-w-md mx-auto">
-    <Breadcrumb items={[
-      { label: 'Home', href: '/' },
-      { label: 'Songs', href: '/songs' },
-      { label: song ? song.title : 'Song', current: true }
-    ]} />
-
     <!-- Song content -->
     <SongViewer songData={song} />
   </div>

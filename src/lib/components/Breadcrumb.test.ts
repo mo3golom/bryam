@@ -57,7 +57,7 @@ describe('Breadcrumb Component', () => {
     it('should render when items array has multiple items', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -72,7 +72,7 @@ describe('Breadcrumb Component', () => {
     it('should apply mobile-first responsive spacing', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -90,7 +90,7 @@ describe('Breadcrumb Component', () => {
     it('should render separators between breadcrumb items', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -110,7 +110,7 @@ describe('Breadcrumb Component', () => {
     it('should render clickable links for non-current items', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -123,7 +123,7 @@ describe('Breadcrumb Component', () => {
       expect(links[0].getAttribute('href')).toBe('/')
       expect(links[0].textContent).toBe('Home')
 
-      expect(links[1].getAttribute('href')).toBe('/songs')
+      expect(links[1].getAttribute('href')).toBe('/')
       expect(links[1].textContent).toBe('Songs')
     })
 
@@ -166,7 +166,7 @@ describe('Breadcrumb Component', () => {
     it('should handle keyboard navigation with Enter key', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -190,13 +190,13 @@ describe('Breadcrumb Component', () => {
     it('should handle keyboard navigation with Space key', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
       flushSync()
 
-      const songsLink = target.querySelector('a[href="/songs"]')
+      const songsLink = target.querySelector('a[href="/"]')
       
       const spaceEvent = new KeyboardEvent('keydown', { 
         key: ' ',
@@ -208,13 +208,13 @@ describe('Breadcrumb Component', () => {
       songsLink?.dispatchEvent(spaceEvent)
 
       expect(preventDefaultSpy).toHaveBeenCalled()
-      expect(window.location.href).toBe('/songs')
+      expect(window.location.href).toBe('/')
     })
 
     it('should not handle other keyboard keys', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -237,7 +237,7 @@ describe('Breadcrumb Component', () => {
     it('should have proper focus indicators for links', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -269,7 +269,7 @@ describe('Breadcrumb Component', () => {
     it('should use proper semantic HTML structure', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -295,7 +295,7 @@ describe('Breadcrumb Component', () => {
     it('should have touch-friendly minimum dimensions', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -313,7 +313,7 @@ describe('Breadcrumb Component', () => {
     it('should have proper padding for touch targets', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -329,7 +329,7 @@ describe('Breadcrumb Component', () => {
     it('should have hover states for desktop interaction', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -363,7 +363,7 @@ describe('Breadcrumb Component', () => {
     it('should maintain proper spacing between items on mobile and desktop', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -380,7 +380,7 @@ describe('Breadcrumb Component', () => {
     it('should use proper landmark navigation', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -393,7 +393,7 @@ describe('Breadcrumb Component', () => {
     it('should provide meaningful link text', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home Page', href: '/' },
-        { label: 'Song Library', href: '/songs' },
+        { label: 'Song Library', href: '/' },
         { label: 'Specific Song Title', current: true }
       ]
 
@@ -411,7 +411,7 @@ describe('Breadcrumb Component', () => {
     it('should hide decorative separators from screen readers', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -427,7 +427,7 @@ describe('Breadcrumb Component', () => {
     it('should maintain logical tab order', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Artists', href: '/artists' },
         { label: 'Current Artist', current: true }
       ]
@@ -440,7 +440,7 @@ describe('Breadcrumb Component', () => {
 
       // Links should appear in order
       expect(links[0].getAttribute('href')).toBe('/')
-      expect(links[1].getAttribute('href')).toBe('/songs')
+      expect(links[1].getAttribute('href')).toBe('/')
       expect(links[2].getAttribute('href')).toBe('/artists')
 
       // None should have negative tabindex
@@ -452,7 +452,7 @@ describe('Breadcrumb Component', () => {
     it('should support screen reader navigation with proper structure', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' },
+        { label: 'Songs', href: '/' },
         { label: 'Current Song', current: true }
       ]
 
@@ -481,7 +481,7 @@ describe('Breadcrumb Component', () => {
     it('should provide context for screen reader users', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Music Library', href: '/songs' },
+        { label: 'Music Library', href: '/' },
         { label: 'Ukulele Songs', current: true }
       ]
 
@@ -508,7 +508,7 @@ describe('Breadcrumb Component', () => {
     it('should handle empty item labels gracefully', () => {
       const items: BreadcrumbItem[] = [
         { label: '', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -523,7 +523,7 @@ describe('Breadcrumb Component', () => {
     it('should handle special characters in labels', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home & Garden', href: '/' },
-        { label: 'Songs "With" Quotes', href: '/songs' },
+        { label: 'Songs "With" Quotes', href: '/' },
         { label: 'Current <Song>', current: true }
       ]
 
@@ -610,7 +610,7 @@ describe('Breadcrumb Component', () => {
     it('should maintain accessibility when props change', () => {
       let items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
@@ -641,7 +641,7 @@ describe('Breadcrumb Component', () => {
     it('should handle rapid keyboard navigation', () => {
       const items: BreadcrumbItem[] = [
         { label: 'Home', href: '/' },
-        { label: 'Songs', href: '/songs' }
+        { label: 'Songs', href: '/' }
       ]
 
       component = mount(Breadcrumb, { target, props: { items } })
