@@ -2,7 +2,6 @@
   import type { PageData } from './$types';
   import SongList from '$lib/components/SongList.svelte';
   import ErrorNotification from '$lib/components/ErrorNotification.svelte';
-  import Navigation from '$lib/components/Navigation.svelte';
 
   export let data: PageData;
 
@@ -22,8 +21,6 @@
   <title>Ukulele Song Catalog</title>
   <meta name="description" content="Browse our collection of ukulele songs with chords and lyrics" />
 </svelte:head>
-
-<Navigation title="Ukulele Catalog" />
 
 <main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
   <div class="max-w-md mx-auto">
