@@ -108,8 +108,6 @@ describe('Individual Song Page Integration Tests', () => {
 
       const mainElement = container.querySelector('main')
       expect(mainElement).toHaveClass('min-h-screen')
-      expect(mainElement).toHaveClass('py-4')
-      expect(mainElement).toHaveClass('px-4')
 
       const containerDiv = container.querySelector('.max-w-md')
       expect(containerDiv).toBeInTheDocument()

@@ -146,9 +146,6 @@ describe('End-to-End User Journey Integration Tests', () => {
       // Verify mobile-first constraints in song page
       const pageMain = container.querySelector('main')
       expect(pageMain).toHaveClass('min-h-screen')
-      expect(pageMain).toHaveClass('bg-gray-50')
-      expect(pageMain).toHaveClass('py-4')
-      expect(pageMain).toHaveClass('px-4')
 
       const pageContainer = container.querySelector('.max-w-md')
       expect(pageContainer).toBeInTheDocument()

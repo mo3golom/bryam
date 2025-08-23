@@ -20,7 +20,7 @@
   <title>{song ? `${song.title} - Ukulele Song Catalog` : 'Song - Ukulele Song Catalog'}</title>
   <meta name="description" content={song ? `${song.title} by ${song.artist || 'Unknown artist'} - Ukulele chords and lyrics` : 'Ukulele song with chords and lyrics'} />
 </svelte:head>
-<main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4" tabindex="-1">
+<main id="main-content" class="min-h-screen" tabindex="-1">
   <BackButton targetPage="/" />
   <div class="max-w-md mx-auto">
     <!-- Song content -->

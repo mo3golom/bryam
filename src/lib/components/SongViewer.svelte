@@ -69,7 +69,7 @@
   <!-- Song Header -->
   <header class="mb-6 text-center">
     <h1
-      id="daily-quiz-heading"
+      id="song-title"
       class="text-3xl md:text-4xl font-bold text-main-font"
     >
       <p
@@ -80,6 +80,7 @@
     </h1>
     {#if songData.artist}
       <p
+        id="song-artist"
         class="bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap"
       >
         {songData.artist}

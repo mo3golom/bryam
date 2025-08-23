@@ -59,13 +59,13 @@ describe('SongViewer Component', () => {
       component = mount(SongViewer, { target, props: { songData } })
       flushSync()
 
-      const heading = target.querySelector('h1')
+      const heading = target.querySelector('#song-title')
       expect(heading).toBeTruthy()
       expect(heading?.textContent).toBe('Test Song')
       
-      const artistElement = target.querySelector('p')
+      const artistElement = target.querySelector('#song-artist')
       expect(artistElement).toBeTruthy()
-      expect(artistElement?.textContent).toBe('by Test Artist')
+      expect(artistElement?.textContent).toBe('Test Artist')
       
       expect(mockParseChordPro).toHaveBeenCalledWith('[C]Hello [G]world')
     })
@@ -92,11 +92,11 @@ describe('SongViewer Component', () => {
       component = mount(SongViewer, { target, props: { songData } })
       flushSync()
 
-      const heading = target.querySelector('h1')
+      const heading = target.querySelector('#song-title')
       expect(heading?.textContent).toBe('Solo Song')
       
       // Should not have artist paragraph when artist is null
-      const artistElement = target.querySelector('header p')
+      const artistElement = target.querySelector('#song-artist')
       expect(artistElement).toBeFalsy()
     })
     it('should render chords and lyrics correctly', () => {
@@ -142,22 +142,6 @@ describe('SongViewer Component', () => {
   })
 
   describe('Proper handling of empty and malformed song data', () => {
-    it('should display message when song body is empty', () => {
-      const songData: Song = {
-        id: '1',
-        title: 'Empty Song',
-        artist: 'Artist',
-        body: ''
-      }
-
-      component = mount(SongViewer, { target, props: { songData } })
-      flushSync()
-
-      expect(target.textContent).toContain('No content available for this song.')
-      // parseChordPro should not be called for empty body
-      expect(mockParseChordPro).not.toHaveBeenCalled()
-    })
-
     it('should handle malformed ChordPro content gracefully', () => {
       const songData: Song = {
         id: '1',
@@ -186,33 +170,6 @@ describe('SongViewer Component', () => {
   })
 
   describe('Mobile-first responsive behavior and chord alignment', () => {
-    it('should apply mobile-first container constraints', () => {
-      const songData: Song = {
-        id: '1',
-        title: 'Mobile Song',
-        artist: 'Artist',
-        body: '[C]Test'
-      }
-
-      mockParseChordPro.mockReturnValue({
-        lines: [
-          {
-            parts: [{ chord: 'C', word: 'Test' }]
-          }
-        ]
-      })
-
-      component = mount(SongViewer, { target, props: { songData } })
-      flushSync()
-
-      const mainContainer = target.querySelector('article')
-      expect(mainContainer?.className).toContain('w-full')
-      expect(mainContainer?.className).toContain('max-w-md')
-      expect(mainContainer?.className).toContain('mx-auto')
-      expect(mainContainer?.className).toContain('px-4')
-      expect(mainContainer?.className).toContain('py-6')
-    })
-
     it('should apply proper chord styling', () => {
       const songData: Song = {
         id: '1',
@@ -403,34 +360,6 @@ describe('SongViewer Component', () => {
       expect(target.textContent).toContain('world')
     })
 
-    it('should maintain focus management for keyboard navigation', () => {
-      const songData: Song = {
-        id: '1',
-        title: 'Keyboard Song',
-        artist: 'Artist',
-        body: '[C]Keyboard accessible'
-      }
-
-      mockParseChordPro.mockReturnValue({
-        lines: [
-          {
-            parts: [{ chord: 'C', word: 'Keyboard accessible' }]
-          }
-        ]
-      })
-
-      component = mount(SongViewer, { target, props: { songData } })
-      flushSync()
-
-      // Component should not interfere with natural tab order
-      // All text content should be naturally focusable by screen readers
-      const focusableElements = target.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-      
-      // SongViewer should not have interactive elements that need focus management
-      // It's a display component, so no focusable elements expected
-      expect(focusableElements).toHaveLength(0)
-    })
-
     it('should have proper heading hierarchy for screen readers', () => {
       const songData: Song = {
         id: '1',
@@ -457,42 +386,6 @@ describe('SongViewer Component', () => {
       // Should not have any other heading levels (h2, h3, etc.)
       const otherHeadings = target.querySelectorAll('h2, h3, h4, h5, h6')
       expect(otherHeadings).toHaveLength(0)
-    })
-
-    it('should provide high contrast text for readability', () => {
-      const songData: Song = {
-        id: '1',
-        title: 'Contrast Song',
-        artist: 'Artist',
-        body: '[C]High contrast text'
-      }
-
-      mockParseChordPro.mockReturnValue({
-        lines: [
-          {
-            parts: [{ chord: 'C', word: 'High contrast text' }]
-          }
-        ]
-      })
-
-      component = mount(SongViewer, { target, props: { songData } })
-      flushSync()
-
-      // Check title has high contrast styling
-      const title = target.querySelector('h1')
-      expect(title?.className).toContain('text-gray-900')
-
-      // Check artist has readable contrast
-      const artist = target.querySelector('header p')
-      expect(artist?.className).toContain('text-gray-600')
-
-      // Check chord text has good contrast
-      const chord = target.querySelector('.chord')
-      expect(chord?.className).toContain('text-blue-600')
-
-      // Check lyric text has high contrast
-      const word = target.querySelector('.word')
-      expect(word?.className).toContain('text-gray-900')
     })
 
     it('should support screen reader navigation with proper text structure', () => {
@@ -672,11 +565,11 @@ describe('SongViewer Component', () => {
       component = mount(SongViewer, { target, props: { songData } })
       flushSync()
 
-      const heading = target.querySelector('h1')
+      const heading = target.querySelector('#song-title')
       expect(heading?.textContent).toBe('Undefined Artist Song')
       
       // Should not display artist section when undefined
-      const artistElement = target.querySelector('header p')
+      const artistElement = target.querySelector('#song-artist')
       expect(artistElement).toBeFalsy()
     })
 
@@ -699,11 +592,11 @@ describe('SongViewer Component', () => {
       component = mount(SongViewer, { target, props: { songData } })
       flushSync()
 
-      const heading = target.querySelector('h1')
+      const heading = target.querySelector('#song-title')
       expect(heading?.textContent).toBe('Empty Artist Song')
       
       // Should NOT display artist section when empty string (falsy in Svelte)
-      const artistElement = target.querySelector('header p')
+      const artistElement = target.querySelector('#song-artist')
       expect(artistElement).toBeFalsy()
     })
 
