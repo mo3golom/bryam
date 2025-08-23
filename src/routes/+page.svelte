@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { PageData } from './$types';
-  import SongList from '$lib/components/SongList.svelte';
-  import ErrorNotification from '$lib/components/ErrorNotification.svelte';
+  import type { PageData } from "./$types";
+  import SongList from "$lib/components/SongList.svelte";
+  import ErrorNotification from "$lib/components/ErrorNotification.svelte";
 
   export let data: PageData;
 
@@ -19,17 +19,30 @@
 
 <svelte:head>
   <title>Ukulele Song Catalog</title>
-  <meta name="description" content="Browse our collection of ukulele songs with chords and lyrics" />
+  <meta
+    name="description"
+    content="Browse our collection of ukulele songs with chords and lyrics"
+  />
 </svelte:head>
 
-<main id="main-content" class="min-h-screen bg-gray-50 py-4 px-4 pt-20" tabindex="-1">
+<main id="main-content" class="min-h-screen pt-8" tabindex="-1">
   <div class="max-w-md mx-auto">
-    <header class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 text-center">
-        <span role="img" aria-label="Musical note">🎵</span> 
-        Ukulele Songs
+    <header class="mb-6 text-center">
+      <h1
+        id="daily-quiz-heading"
+        class="text-3xl md:text-4xl font-bold text-main-font "
+      >
+        <p
+          class="bg-primary text-primary-content w-max p-2 pl-4 pr-4 rounded-full mx-auto -rotate-5 translate-y-2 whitespace-nowrap"
+        >
+          Ukulele Songs
+        </p>
+        <p
+        class="bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap"
+      >
+        chords for you
+      </p>
       </h1>
-      <p class="text-gray-600 text-center mt-2">Browse and play your favorite songs</p>
     </header>
 
     <SongList {songs} {loading} {error} onRetry={handleRetry} />

@@ -9,6 +9,7 @@ export interface ParsedLine {
 
 export interface ParsedSong {
   lines: ParsedLine[]
+  error?: boolean
 }
 
 /**

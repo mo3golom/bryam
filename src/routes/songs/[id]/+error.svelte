@@ -16,7 +16,7 @@
   <meta name="description" content="An error occurred while loading the song" />
 </svelte:head>
 
-<main class="min-h-screen bg-gray-50 py-4 px-4">
+<main class="min-h-screen py-4 px-4">
   <div class="max-w-md mx-auto">
     <!-- Back button -->
     <div class="mb-4">

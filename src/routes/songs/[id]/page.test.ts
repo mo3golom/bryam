@@ -108,7 +108,6 @@ describe('Individual Song Page Integration Tests', () => {
 
       const mainElement = container.querySelector('main')
       expect(mainElement).toHaveClass('min-h-screen')
-      expect(mainElement).toHaveClass('bg-gray-50')
       expect(mainElement).toHaveClass('py-4')
       expect(mainElement).toHaveClass('px-4')
 
