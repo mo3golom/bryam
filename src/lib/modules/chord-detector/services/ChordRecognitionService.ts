@@ -21,8 +21,8 @@ type ResultCallback = (result: RecognitionResult) => void;
 export class ChordRecognitionService {
   private notes: Set<string> = new Set();
   private targetChord: string | null = null;
-  private debounceTimeout: any | null = null;
-  private resetTimeout: any | null = null;
+  private debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  private resetTimeout: ReturnType<typeof setTimeout> | null = null;
   private debounceTime: number;
   private resetTime: number;
   private callbacks: Set<ResultCallback> = new Set();
@@ -48,10 +48,6 @@ export class ChordRecognitionService {
     this.debounceTimeout = setTimeout(() => {
       this.recognizeChord();
     }, this.debounceTime);
-
-    this.resetTimeout = setTimeout(() => {
-      this.notes.clear();
-    }, this.resetTime);
   }
 
   setTargetChord(chord: string) {
@@ -71,7 +67,9 @@ export class ChordRecognitionService {
 
     let status: RecognitionStatus;
     if (detectedChord && this.targetChord) {
-      status = Chord.get(detectedChord).aliases.includes(this.targetChord)
+      const detected = Chord.get(detectedChord).name;
+      const target = Chord.get(this.targetChord).name;
+      status = detected === target
         ? RecognitionStatus.Correct
         : RecognitionStatus.Incorrect;
     } else {
@@ -79,5 +77,9 @@ export class ChordRecognitionService {
     }
 
     for (const cb of this.callbacks) cb({ status, detectedChord });
+
+    this.resetTimeout = setTimeout(() => {
+      this.notes.clear();
+    }, this.resetTime);
   }
 }
