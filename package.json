@@ -38,6 +38,8 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.55.0",
-		"@sveltejs/adapter-node": "^5.3.1"
+		"@sveltejs/adapter-node": "^5.3.1",
+		"@tonaljs/tonal": "^4.10.0",
+		"pitchy": "^4.1.0"
 	}
 }
