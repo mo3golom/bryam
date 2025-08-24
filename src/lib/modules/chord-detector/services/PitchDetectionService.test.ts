@@ -17,7 +17,7 @@ vi.mock('pitchy', () => ({
 
 // Mock @tonaljs/note
 vi.mock('@tonaljs/note', async () => {
-  const actual = await vi.importActual('@tonaljs/note');
+  const actual = await vi.importActual<typeof TonalNote>('@tonaljs/note');
   return {
     ...actual,
     fromFreq: vi.fn(),
@@ -104,7 +104,7 @@ describe('PitchDetectionService', () => {
 
     it('should call callbacks with the detected note', () => {
       mockPitchDetector.findPitch.mockReturnValue([440, 0.9]);
-      vi.mocked(TonalNote).fromFreq.mockReturnValue('A4');
+      vi.mocked(TonalNote.fromFreq).mockReturnValue('A4');
 
       const callback = vi.fn();
       service.subscribeToNotes(callback);
@@ -113,6 +113,7 @@ describe('PitchDetectionService', () => {
       service['processAudio']();
 
       expect(callback).toHaveBeenCalledWith('A4');
+      expect(TonalNote.fromFreq).toHaveBeenCalledWith(440);
     });
   });
 
@@ -132,7 +133,6 @@ describe('PitchDetectionService', () => {
       const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((() => 1) as any);
       service.start();
       expect(requestAnimationFrameSpy).toHaveBeenCalled();
-      requestAnimationFrameSpy.mockRestore();
     });
 
     it('should call cancelAnimationFrame on stop', () => {
@@ -140,7 +140,6 @@ describe('PitchDetectionService', () => {
       service.start();
       service.stop();
       expect(cancelAnimationFrameSpy).toHaveBeenCalled();
-      cancelAnimationFrameSpy.mockRestore();
     });
   });
 });
