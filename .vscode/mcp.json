@@ -1,0 +1,22 @@
+{
+    "servers": {
+        "Context7": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp"
+            ],
+            "env": {},
+        },
+        "browser-use": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "browser-use[cli]",
+                "--mcp"
+            ]
+        }
+    },
+    "inputs": []
+}
