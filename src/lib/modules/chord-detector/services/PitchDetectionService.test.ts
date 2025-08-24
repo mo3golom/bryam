@@ -31,7 +31,15 @@ const mockAudioContext = {
 
 const mockAnalyserNode = {
   fftSize: 1024,
-  getFloatTimeDomainData: vi.fn(),
+  getFloatTimeDomainData: vi.fn((buffer: Float32Array) => {
+    // Fill the buffer with some sine wave data to simulate audio
+    const sampleRate = 44100;
+    const frequency = 440; // A4 note
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = Math.sin((2 * Math.PI * frequency * i) / sampleRate);
+    }
+    return buffer;
+  }),
 };
 
 describe('PitchDetectionService', () => {
@@ -133,6 +141,7 @@ describe('PitchDetectionService', () => {
       const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((() => 1) as any);
       service.start();
       expect(requestAnimationFrameSpy).toHaveBeenCalled();
+      requestAnimationFrameSpy.mockRestore();
     });
 
     it('should call cancelAnimationFrame on stop', () => {
@@ -140,6 +149,7 @@ describe('PitchDetectionService', () => {
       service.start();
       service.stop();
       expect(cancelAnimationFrameSpy).toHaveBeenCalled();
+      cancelAnimationFrameSpy.mockRestore();
     });
   });
 });
