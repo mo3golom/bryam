@@ -19,7 +19,7 @@ Based on the requirements.md specifications, here are the implementation tasks f
 
 ## Phase 2: Core Audio Services Implementation
 
-- [ ] 3. Implement AudioService class
+- [x] 3. Implement AudioService class
   - Create `src/lib/modules/chord-detector/services/AudioService.ts`
   - Implement microphone permission handling using `navigator.mediaDevices.getUserMedia`
   - Create and manage `AudioContext` and `AnalyserNode` instances
@@ -28,7 +28,7 @@ Based on the requirements.md specifications, here are the implementation tasks f
   - Include proper resource cleanup and memory management
   - _Requirements: 3.2 AudioService, 3.5 API Design, 4.1 Technical Risks_
 
-- [ ] 4. Write unit tests for AudioService
+ - [x] 4. Write unit tests for AudioService
   - Test microphone permission request scenarios
   - Test AudioContext creation and management
   - Test error handling for denied permissions and unavailable devices
