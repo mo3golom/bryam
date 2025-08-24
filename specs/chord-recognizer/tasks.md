@@ -45,7 +45,7 @@ Based on the requirements.md specifications, here are the implementation tasks f
   - Implement service interface: `start()`, `stop()`, `subscribeToNotes()`
   - _Requirements: 3.2 PitchDetectionService, 3.5 API Design_
 
-- [ ] 6. Write unit tests for PitchDetectionService
+- [x] 6. Write unit tests for PitchDetectionService
   - Test frequency detection with mock audio data
   - Test clarity threshold filtering functionality
   - Test frequency to note name conversion accuracy
