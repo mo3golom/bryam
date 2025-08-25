@@ -33,6 +33,27 @@ describe('ChordRecognitionService', () => {
 		});
 	});
 
+	it('should reset debounce timer on new note', () => {
+		const service = new ChordRecognitionService({ debounceTime: 300 });
+		const callback = vi.fn();
+		service.subscribeToResult(callback);
+
+		service.addNote('C');
+		vi.advanceTimersByTime(200);
+		service.addNote('E');
+		vi.advanceTimersByTime(200);
+		service.addNote('G');
+
+		expect(callback).not.toHaveBeenCalled();
+
+		vi.advanceTimersByTime(300);
+
+		expect(callback).toHaveBeenCalledWith({
+			status: RecognitionStatus.Unrecognized, // No target chord set
+			detectedChord: 'CM'
+		});
+	});
+
 	it('should reset notes after reset time', () => {
 		const service = new ChordRecognitionService({ debounceTime: 300, resetTime: 800 });
 		const callback = vi.fn();
@@ -71,6 +92,23 @@ describe('ChordRecognitionService', () => {
 		expect(callback).toHaveBeenCalledWith({
 			status: RecognitionStatus.Incorrect,
 			detectedChord: 'CM'
+		});
+	});
+
+	it('should return Unrecognized when no chord is detected', () => {
+		const service = new ChordRecognitionService({ debounceTime: 300 });
+		const callback = vi.fn();
+		service.subscribeToResult(callback);
+		service.setTargetChord('C');
+
+		service.addNote('C');
+		service.addNote('C#');
+
+		vi.advanceTimersByTime(300);
+
+		expect(callback).toHaveBeenCalledWith({
+			status: RecognitionStatus.Unrecognized,
+			detectedChord: undefined
 		});
 	});
 
