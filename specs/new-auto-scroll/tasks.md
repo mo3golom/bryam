@@ -1,18 +1,18 @@
 ### Phase 1: Foundation & Data Enhancement
-- [ ] 1. **Enhance ChordPro Parser**
+- [x] 1. **Enhance ChordPro Parser**
     -   Modify the `ParsedLine` interface in `src/lib/utils/chordpro.ts` to include `metadata: { chordCount: number }`.
     -   Update the `parseChordPro` function to accurately count the number of chords in each line and populate the new `metadata.chordCount` property.
     -   Ensure existing unit tests for `chordpro.ts` are updated and passing.
     -   _Requirements: 3.2, 3.3, 3.4_
 
-- [ ] 2. **Define Core Timing Formulas**
+- [x] 2. **Define Core Timing Formulas**
     -   Create a new utility function, `calculateLineDuration`, that accepts `bpm`, `chordCount`, and an optional `beatsPerChord` as arguments.
     -   Implement the formula: `lineDurationInMs = (chordCount * beatsPerChord * 60 * 1000) / bpm`.
     -   Set a default value of 4 for `beatsPerChord` to handle standard 4/4 time signatures.
     -   _Requirements: 3.1, 3.2, 3.3_
 
 ### Phase 2: Core Engine Implementation
-- [ ] 3. **Create `TempoScrollEngine` Class Structure**
+- [x] 3. **Create `TempoScrollEngine` Class Structure**
     -   Create a new file: `src/lib/utils/TempoScrollEngine.ts`.
     -   Define the `TempoScrollEngine` class with a constructor that accepts a `ParsedSong` object and an initial BPM.
     -   Implement public methods: `start()`, `stop()`, `pause()`, `resume()`, and `setBpm()`.
