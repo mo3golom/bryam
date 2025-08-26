@@ -5,6 +5,9 @@ export interface ChordLyricPair {
 
 export interface ParsedLine {
   parts: ChordLyricPair[]
+  metadata?: {
+    chordCount: number
+  }
 }
 
 export interface ParsedSong {
@@ -20,7 +23,7 @@ export interface ParsedSong {
  */
 export function parseChordPro(text: string): ParsedSong {
   if (!text || typeof text !== 'string') {
-    return { lines: [] }
+  return { lines: [] }
   }
 
   const lines = text.split('\n')
@@ -32,7 +35,7 @@ export function parseChordPro(text: string): ParsedSong {
     // Handle empty lines
     if (line.trim() === '') {
       parts.push({ chord: null, word: '' })
-      parsedLines.push({ parts })
+      parsedLines.push({ parts, metadata: { chordCount: 0 } })
       continue
     }
 
@@ -81,7 +84,9 @@ export function parseChordPro(text: string): ParsedSong {
       parts.push({ chord: null, word: line })
     }
 
-    parsedLines.push({ parts })
+  // Count chords in this line (parts where chord !== null)
+  const chordCount = parts.filter(p => p.chord).length
+  parsedLines.push({ parts, metadata: { chordCount } })
   }
 
   return { lines: parsedLines }

@@ -9,11 +9,12 @@ describe('ChordPro Parser', () => {
       const result = parseChordPro(input)
       
       expect(result.lines).toHaveLength(1)
-      expect(result.lines[0].parts).toEqual([
+  expect(result.lines[0].parts).toEqual([
         { chord: 'C', word: 'Hello' },
         { chord: null, word: ' ' },
         { chord: 'G', word: 'world' }
       ])
+  expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
 
     it('should handle chords at the beginning of words', () => {
@@ -25,6 +26,7 @@ describe('ChordPro Parser', () => {
         { chord: null, word: ' ' },
         { chord: 'F', word: 'grace' }
       ])
+  expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
 
     it('should handle chords in the middle of words', () => {
@@ -37,6 +39,7 @@ describe('ChordPro Parser', () => {
         { chord: null, word: ' over the ' },
         { chord: 'G', word: 'rainbow' }
       ])
+  expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
 
     it('should handle multiple chords on the same word', () => {
@@ -47,6 +50,8 @@ describe('ChordPro Parser', () => {
         { chord: 'C', word: '[G]word' },
         { chord: 'G', word: 'word' }
       ])
+  // In this case parser treats the first part as a chord with the following text
+  expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
   })
 
