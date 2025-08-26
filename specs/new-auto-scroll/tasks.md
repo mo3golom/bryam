@@ -44,7 +44,7 @@
     -   _Requirements: 3.1, 3.3_
 
 ### Phase 4: Scrolling & User Controls
-- [ ] 8. **Implement Line-by-Line Scrolling**
+- [x] 8. **Implement Line-by-Line Scrolling**
     -   Use a Svelte 5 `$effect` in `SongViewer.svelte` that tracks changes to `engine.activeLineIndex`.
     -   When the index changes, get the corresponding DOM element for the new active line.
     -   Use the `element.scrollIntoView({ behavior: 'smooth', block: 'center' })` method to smoothly transition the active line into the center of the viewport.

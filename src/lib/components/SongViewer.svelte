@@ -32,6 +32,25 @@
   // Bind engine state to Svelte runes
   let engineState = $derived(() => engine ? engine.state : null);
 
+  // Scroll the active line into view when the engine's activeLineIndex changes
+  $effect(() => {
+    // Guard for SSR
+    if (typeof document === 'undefined') return;
+
+    const activeIndex = engineState()?.activeLineIndex ?? -1;
+    if (activeIndex < 0) return;
+
+    // Only perform auto-scrolling when the auto-scroll feature is enabled
+    if (!autoScrollEnabled) return;
+
+    const selector = `[data-line-index="${activeIndex}"]`;
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return;
+
+    // Smoothly center the active line in the viewport
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
 
   // Check if content is empty or whitespace only
   let isEmpty = $derived(!songData.body || songData.body.trim() === '');
