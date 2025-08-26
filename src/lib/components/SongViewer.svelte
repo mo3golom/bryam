@@ -87,6 +87,32 @@
     }
   }
 
+  // Track when user manually paused the auto-scroll via wheel/touch interaction
+  let manualPaused: boolean = $state(false);
+
+  // When the user manually scrolls (wheel or touch), pause the engine
+  function handleManualScroll(_event: Event) {
+    if (!engine) return;
+    // Only act if the engine is currently playing
+    if (engine.state.isActive && !engine.state.isPaused) {
+      engine.pause();
+      manualPaused = true;
+      // Keep autoScrollEnabled true so the Resume UI is available
+      autoScrollEnabled = true;
+    }
+  }
+
+  // Resume after a manual pause initiated by user interaction
+  function resumeFromManual() {
+    if (!engine) return;
+    if (engine.state.isPaused) {
+      if (typeof engine.resume === 'function') engine.resume();
+      else engine.start();
+    }
+    manualPaused = false;
+    autoScrollEnabled = true;
+  }
+
   // Resume playback if the engine was paused
   function resumeAutoScroll() {
     if (!engine) return;
@@ -157,7 +183,12 @@
   </header>
 
   <!-- Song Content -->
-  <section class="song-content pb-20" aria-label="Song lyrics and chords">
+  <section
+    class="song-content pb-20"
+    aria-label="Song lyrics and chords"
+    onwheel={handleManualScroll}
+    ontouchstart={handleManualScroll}
+  >
     <div class="card">
       <div class="card-body">
         {#if hasError}
@@ -216,6 +247,14 @@
       </div>
     </div>
   </section>
+  {#if manualPaused}
+    <!-- Resume overlay when user manually paused scrolling -->
+    <div class="resume-overlay" role="status" aria-live="polite">
+      <button class="btn btn-primary resume-btn" onclick={resumeFromManual} aria-label="Resume auto-scroll">
+        Resume
+      </button>
+    </div>
+  {/if}
   <div
     class="dock max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-sm bg-transparent"
   >
@@ -359,5 +398,22 @@
     border-radius: 4px;
     padding: 0 0.125rem;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.06) inset;
+  }
+
+  /* Resume overlay shown after manual scroll/touch pauses the engine */
+  .resume-overlay {
+    position: fixed;
+    left: 50%;
+    bottom: 6.25rem; /* place above the dock */
+    transform: translateX(-50%);
+    z-index: 60;
+    pointer-events: none; /* allow underlying scroll until button is used */
+  }
+
+  .resume-overlay .resume-btn {
+    pointer-events: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 9999px;
   }
 </style>
