@@ -23,6 +23,8 @@
   });
   // Remove old auto-scroll state
   let autoScrollEnabled: boolean = $state(false);
+  // Track whether playback has been started at least once (for smart scroll start)
+  let hasStartedOnce: boolean = $state(false);
 
   // Instantiate the TempoScrollEngine with parsedSong and default BPM
   let engine = $derived.by(() => {
@@ -96,6 +98,38 @@
       engine.start();
     }
     autoScrollEnabled = true;
+  }
+
+  // Smart start: on the very first play, scroll the first line into view before starting
+  // This ensures the song is positioned correctly when playback begins (Task 11)
+  function smartStartIfFirstPlay() {
+    if (hasStartedOnce) return false;
+    // Guard for SSR
+    if (typeof document === 'undefined') return false;
+
+    const firstLine = document.querySelector('[data-line-index="0"]') as HTMLElement | null;
+    if (!firstLine) return false;
+
+    // Smoothly center the first line
+    firstLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Mark that we've performed the initial start scroll so it won't repeat
+    hasStartedOnce = true;
+
+    // Delay starting the engine slightly to allow the smooth scroll to begin
+    // 300ms is a reasonable compromise between responsiveness and allowing the animation
+    setTimeout(() => {
+      if (!engine) return;
+      if (engine.state.isPaused) {
+        if (typeof engine.resume === 'function') engine.resume();
+        else engine.start();
+      } else if (!engine.state.isActive) {
+        engine.start();
+      }
+      autoScrollEnabled = true;
+    }, 300);
+
+    return true;
   }
 </script>
 
@@ -235,7 +269,7 @@
             <button
               class="btn btn-square btn-primary btn-ghost join-item"
               aria-label="play"
-              onclick={() => { resumeAutoScroll(); }}
+              onclick={() => { if (!smartStartIfFirstPlay()) resumeAutoScroll(); }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />

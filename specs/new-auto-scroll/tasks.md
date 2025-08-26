@@ -57,13 +57,13 @@
     -   Connect the button events to the `engine.setBpm()` method to allow real-time tempo changes.
     -   _Requirements: 3.2, 3.3_
 
-- [ ] 10. **Implement Play/Pause/Stop Controls**
+- [x] 10. **Implement Play/Pause/Stop Controls**
     -   Connect the existing play, pause, and stop buttons in the `SongViewer` floating dock to the corresponding `engine.start()`, `engine.pause()`, and `engine.stop()` methods.
     -   Use the engine's state (`isActive`, `isPaused`) to dynamically toggle the visibility and icons of the control buttons.
     -   _Requirements: 3.2, 3.3_
 
 ### Phase 5: Advanced Features & Refinements
-- [ ] 11. **Implement Smart Scroll Start**
+- [x] 11. **Implement Smart Scroll Start**
     -   In the `SongViewer`'s play button event handler, check if this is the first time playback is starting.
     -   If it is the first play, programmatically scroll to the first line of the song *before* calling `engine.start()`.
     -   _Requirements: 3.3_
