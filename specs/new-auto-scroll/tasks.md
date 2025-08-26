@@ -37,7 +37,7 @@
     -   Use Svelte 5 runes (`$state`, `$derived`) to reactively connect the component's view to the engine's state properties.
     -   _Requirements: 3.1, 3.2_
 
-- [ ] 7. **Implement Line and Chord Highlighting**
+- [x] 7. **Implement Line and Chord Highlighting**
     -   In `SongViewer.svelte`, dynamically apply CSS classes to song lines based on their relationship to `engine.activeLineIndex` (e.g., `.line-past`, `.line-active`, `.line-upcoming`).
     -   Apply a distinct CSS class to the currently active chord based on `engine.activeChordIndex`.
     -   Define the styles for these classes, setting opacity for past lines to `70%` and creating a visible highlight for the active chord.

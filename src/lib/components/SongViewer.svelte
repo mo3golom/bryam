@@ -96,7 +96,13 @@
         {:else}
           <div class="space-y-4">
             {#each parsedSong.lines as line, i}
-              <div class="line-container">
+              <div
+                class="line-container"
+                class:line-past={i < (engineState()?.activeLineIndex ?? -1)}
+                class:line-active={i === (engineState()?.activeLineIndex ?? -1)}
+                class:line-upcoming={i > (engineState()?.activeLineIndex ?? -1)}
+                data-line-index={i}
+              >
                 {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
                   <!-- Empty line for spacing -->
                   <div class="h-4"></div>
@@ -107,6 +113,9 @@
                         {#if part.chord}
                           <div
                             class="chord text-blue-600 font-semibold text-sm leading-none mb-1 min-h-[1rem]"
+                            class:chord-active={
+                              i === (engineState()?.activeLineIndex ?? -1) && j === (engineState()?.activeChordIndex ?? -1)
+                            }
                             aria-label="Chord: {part.chord}"
                           >
                             {part.chord}
@@ -270,5 +279,26 @@
   .line-container {
     min-height: 2.5rem;
     touch-action: manipulation;
+  }
+
+  /* Visual states for auto-scroll */
+  .line-past {
+    opacity: 0.7;
+  }
+
+  .line-active {
+    opacity: 1;
+  }
+
+  .line-upcoming {
+    opacity: 1;
+  }
+
+  /* Highlight the active chord within the active line */
+  .chord-active {
+    background: rgba(59, 130, 246, 0.15); /* blue-500 at low opacity */
+    border-radius: 4px;
+    padding: 0 0.125rem;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.06) inset;
   }
 </style>
