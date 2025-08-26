@@ -50,7 +50,7 @@
     -   Use the `element.scrollIntoView({ behavior: 'smooth', block: 'center' })` method to smoothly transition the active line into the center of the viewport.
     -   _Requirements: 3.1, 3.3, 4.2_
 
-- [ ] 9. **Create and Integrate `BpmController.svelte`**
+- [x] 9. **Create and Integrate `BpmController.svelte`**
     -   Create a new component: `src/lib/components/BpmController.svelte`.
     -   The component should display the current BPM and have `+` and `-` buttons for adjustment.
     -   Add the `BpmController` to the floating dock UI within `SongViewer.svelte`.

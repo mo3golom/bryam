@@ -2,6 +2,7 @@
   import { parseChordPro, type ParsedSong } from "$lib/utils/chordpro.js";
   import type { Song } from "$lib/types.js";
   import { TempoScrollEngine } from "$lib/utils/TempoScrollEngine";
+  import BpmController from '$lib/components/BpmController.svelte';
 
   const DEFAULT_BPM = 120;
 
@@ -73,6 +74,12 @@
 
   function decreaseSpeed() {
     if (engine && engine.state.currentBpm > 30) engine.setBpm(engine.state.currentBpm - 5);
+  }
+
+  // typed setter used by BpmController
+  function handleSetBpm(n: number) {
+    if (typeof n !== 'number') return;
+    engine?.setBpm(n);
   }
 </script>
 
@@ -243,37 +250,16 @@
       <span class="dock-label">auto scroll</span>
     </div>
     <div>
-      <div class="join">
-        <button class="btn btn-square btn-ghost join-item" aria-label="minus">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
-          </svg>
-        </button>
-        <button class="btn btn-square btn-ghost join-item" aria-label="plus">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
-          </svg>
-        </button>
-      </div>
-      <span class="dock-label">text size</span>
+      <!-- BPM controller integration -->
+      {#if engineState()}
+        <BpmController
+          bpm={engineState()?.currentBpm}
+          setBpm={(n) => engine?.setBpm(n)}
+          min={30}
+          max={300}
+          step={5}
+        />
+      {/if}
     </div>
   </div>
 </article>
