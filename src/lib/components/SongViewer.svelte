@@ -64,8 +64,9 @@
   }
 
   function stopAutoScroll() {
-    if (engine) engine.stop();
-    autoScrollEnabled = false;
+  if (engine) engine.stop();
+  // disabling auto-scroll UI when stopped
+  autoScrollEnabled = false;
   }
 
   function increaseSpeed() {
@@ -76,10 +77,25 @@
     if (engine && engine.state.currentBpm > 30) engine.setBpm(engine.state.currentBpm - 5);
   }
 
-  // typed setter used by BpmController
-  function handleSetBpm(n: number) {
-    if (typeof n !== 'number') return;
-    engine?.setBpm(n);
+  // Pause the engine but keep auto-scroll enabled so user can resume
+  function pauseAutoScroll() {
+    if (!engine) return;
+    if (engine.state.isActive && !engine.state.isPaused) {
+      engine.pause();
+    }
+  }
+
+  // Resume playback if the engine was paused
+  function resumeAutoScroll() {
+    if (!engine) return;
+    if (engine.state.isPaused) {
+      // Prefer resume() when available, otherwise start()
+      if (typeof engine.resume === 'function') engine.resume();
+      else engine.start();
+    } else if (!engine.state.isActive) {
+      engine.start();
+    }
+    autoScrollEnabled = true;
   }
 </script>
 
@@ -170,79 +186,83 @@
     class="dock max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-sm bg-transparent"
   >
     <div>
-      {#if !autoScrollEnabled}
-        <button
-          class="btn btn-primary btn-ghost btn-circle"
-          aria-label="auto scroll"
-          onclick={startAutoScroll}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-            />
+      {#if engineState() === null}
+        <!-- No engine yet, show disabled play button -->
+        <button class="btn btn-primary btn-ghost btn-circle" aria-label="auto scroll" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
           </svg>
         </button>
       {:else}
         <div class="join">
+          <!-- Decrease BPM -->
           <button
             class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="backward"
+            aria-label="decrease-bpm"
             onclick={decreaseSpeed}
-            disabled={engineState() === null || (engineState()?.currentBpm ?? 0) <= 30}
+            disabled={(engineState()?.currentBpm ?? 0) <= 30}
           >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
-          </svg>
-          
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
+            </svg>
           </button>
+
+          <!-- Play / Pause / Resume -->
+          {#if engineState()?.isActive && !engineState()?.isPaused}
+            <!-- Pause button -->
+            <button
+              class="btn btn-square btn-primary btn-ghost join-item"
+              aria-label="pause"
+              onclick={pauseAutoScroll}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6.75h-.008v10.5h.008V6.75zM17.508 6.75h-.008v10.5h.008V6.75z" />
+              </svg>
+            </button>
+          {:else if engineState()?.isPaused}
+            <!-- Resume button -->
+            <button
+              class="btn btn-square btn-primary btn-ghost join-item"
+              aria-label="resume"
+              onclick={resumeAutoScroll}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              </svg>
+            </button>
+          {:else}
+            <!-- Start / Play from stopped state -->
+            <button
+              class="btn btn-square btn-primary btn-ghost join-item"
+              aria-label="play"
+              onclick={() => { resumeAutoScroll(); }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              </svg>
+            </button>
+          {/if}
+
+          <!-- Stop button -->
           <button
             class="btn btn-square btn-primary btn-ghost join-item"
             aria-label="stop"
             onclick={stopAutoScroll}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15.75 5.25v13.5m-7.5-13.5v13.5"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
             </svg>
           </button>
+
+          <!-- Increase BPM -->
           <button
             class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="forward"
+            aria-label="increase-bpm"
             onclick={increaseSpeed}
-            disabled={engineState() === null || (engineState()?.currentBpm ?? 0) >= 300}
+            disabled={(engineState()?.currentBpm ?? 0) >= 300}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z" />
             </svg>
           </button>
         </div>
