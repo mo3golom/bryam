@@ -1,11 +1,9 @@
 <script lang="ts">
   import { parseChordPro, type ParsedSong } from "$lib/utils/chordpro.js";
   import type { Song } from "$lib/types.js";
+  import { TempoScrollEngine } from "$lib/utils/TempoScrollEngine";
 
-  const DEFAULT_SPEED = 0.25;
-  const MIN_SPEED = 0.25;
-  const MAX_SPEED = 4;
-  const SPEED_INCREMENT = 0.25;
+  const DEFAULT_BPM = 120;
 
   interface Props {
     songData: Song;
@@ -22,46 +20,40 @@
     }
     return data;
   });
+  // Remove old auto-scroll state
   let autoScrollEnabled: boolean = $state(false);
-  let scrollSpeed = $state(DEFAULT_SPEED);
+
+  // Instantiate the TempoScrollEngine with parsedSong and default BPM
+  let engine = $derived.by(() => {
+    if (!parsedSong || !parsedSong.lines || parsedSong.lines.length === 0) return null;
+    return new TempoScrollEngine(parsedSong, DEFAULT_BPM);
+  });
+
+  // Bind engine state to Svelte runes
+  let engineState = $derived(() => engine ? engine.state : null);
+
 
   // Check if content is empty or whitespace only
   let isEmpty = $derived(!songData.body || songData.body.trim() === '');
   let hasError = $derived(parsedSong.error || (parsedSong.lines.length === 0 && !isEmpty));
 
-  $effect(() => {
-    let frameId: number;
-
-    function scrollLoop() {
-      window.scrollBy(0, scrollSpeed);
-      frameId = requestAnimationFrame(scrollLoop);
-    }
-
-    if (autoScrollEnabled) {
-      frameId = requestAnimationFrame(scrollLoop);
-    }
-
-    return () => {
-      cancelAnimationFrame(frameId);
-    };
-  });
-
+  // Remove old pixel-based auto-scroll logic and controls
   function startAutoScroll() {
-    scrollSpeed = DEFAULT_SPEED;
+    if (engine) engine.start();
     autoScrollEnabled = true;
   }
 
   function stopAutoScroll() {
+    if (engine) engine.stop();
     autoScrollEnabled = false;
-    scrollSpeed = DEFAULT_SPEED;
   }
 
   function increaseSpeed() {
-    scrollSpeed = Math.min(MAX_SPEED, scrollSpeed + SPEED_INCREMENT);
+    if (engine && engine.state.currentBpm < 300) engine.setBpm(engine.state.currentBpm + 5);
   }
 
   function decreaseSpeed() {
-    scrollSpeed = Math.max(MIN_SPEED, scrollSpeed - SPEED_INCREMENT);
+    if (engine && engine.state.currentBpm > 30) engine.setBpm(engine.state.currentBpm - 5);
   }
 </script>
 
@@ -103,14 +95,14 @@
           </div>
         {:else}
           <div class="space-y-4">
-            {#each parsedSong.lines as line}
+            {#each parsedSong.lines as line, i}
               <div class="line-container">
                 {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
                   <!-- Empty line for spacing -->
                   <div class="h-4"></div>
                 {:else}
                   <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
-                    {#each line.parts as part}
+                    {#each line.parts as part, j}
                       <div class="chord-word-pair inline-block">
                         {#if part.chord}
                           <div
@@ -170,7 +162,7 @@
             class="btn btn-square btn-primary btn-ghost join-item"
             aria-label="backward"
             onclick={decreaseSpeed}
-            disabled={scrollSpeed <= MIN_SPEED}
+            disabled={engineState() === null || (engineState()?.currentBpm ?? 0) <= 30}
           >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
@@ -201,7 +193,7 @@
             class="btn btn-square btn-primary btn-ghost join-item"
             aria-label="forward"
             onclick={increaseSpeed}
-            disabled={scrollSpeed >= MAX_SPEED}
+            disabled={engineState() === null || (engineState()?.currentBpm ?? 0) >= 300}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
