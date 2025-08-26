@@ -5,161 +5,172 @@
  * It exposes a simple public API and a snapshot-style `state` getter that can be
  * observed by UI code (for example a Svelte component).
  */
-import type { ParsedSong } from './chordpro'
+import type { ParsedSong } from "./chordpro";
+import { writable, type Writable } from "svelte/store";
 
 export interface TempoScrollEngineState {
-  isActive: boolean
-  isPaused: boolean
-  currentBpm: number
-  activeLineIndex: number
-  activeChordIndex: number
+  isActive: boolean;
+  isPaused: boolean;
+  currentBpm: number;
+  activeLineIndex: number;
+  activeChordIndex: number;
 }
 
 export class TempoScrollEngine {
-  private parsedSong: ParsedSong
-  private beatsPerChord: number
-  private lineDurationsMs: number[] = []
-  private cumulativeLineEndsMs: number[] = []
+  private parsedSong: ParsedSong;
+  private beatsPerChord: number;
+  private lineDurationsMs: number[] = [];
+  private cumulativeLineEndsMs: number[] = [];
 
   // timing
-  private rafId: number | null = null
-  private startTimeMs = 0
-  private pausedElapsedMs = 0
+  private rafId: number | null = null;
+  private startTimeMs = 0;
+  private pausedElapsedMs = 0;
 
   // internal mutable state
-  private _state: TempoScrollEngineState
+  private _state: TempoScrollEngineState;
+  public stateStore: Writable<TempoScrollEngineState>;
 
   constructor(parsedSong: ParsedSong, initialBpm = 120, beatsPerChord = 4) {
-    this.parsedSong = parsedSong
-    this.beatsPerChord = beatsPerChord
+    this.parsedSong = parsedSong;
+    this.beatsPerChord = beatsPerChord;
 
     this._state = {
       isActive: false,
       isPaused: false,
       currentBpm: initialBpm,
       activeLineIndex: 0,
-      activeChordIndex: 0
-    }
+      activeChordIndex: 0,
+    };
 
-    this.recalculateDurations()
+    this.stateStore = writable(this._state);
+
+    this.recalculateDurations();
   }
 
   // Public read-only view of the mutable state (returns the live object)
   get state(): TempoScrollEngineState {
-    return this._state
+    return this._state;
+  }
+
+  private updateState(newState: Partial<TempoScrollEngineState>) {
+    this._state = { ...this._state, ...newState };
+    this.stateStore.set(this._state);
   }
 
   // Controls
   start(): void {
-    if (this._state.isActive && !this._state.isPaused) return
+    if (this._state.isActive && !this._state.isPaused) return;
 
-    this._state.isActive = true
-    this._state.isPaused = false
+    this.updateState({ isActive: true, isPaused: false });
 
     // If we previously paused, resume from pausedElapsedMs
-    this.startTimeMs = performance.now() - this.pausedElapsedMs
-    this.pausedElapsedMs = 0
+    this.startTimeMs = performance.now() - this.pausedElapsedMs;
+    this.pausedElapsedMs = 0;
 
-    this.scheduleTick()
+    this.scheduleTick();
   }
 
   stop(): void {
-    this._state.isActive = false
-    this._state.isPaused = false
-    this._state.activeLineIndex = 0
-    this._state.activeChordIndex = 0
+    this.updateState({
+      isActive: false,
+      isPaused: false,
+      activeLineIndex: 0,
+      activeChordIndex: 0,
+    });
 
-    this.clearTick()
-    this.startTimeMs = 0
-    this.pausedElapsedMs = 0
+    this.clearTick();
+    this.startTimeMs = 0;
+    this.pausedElapsedMs = 0;
   }
 
   pause(): void {
-    if (!this._state.isActive || this._state.isPaused) return
-    this._state.isPaused = true
-    this._state.isActive = false
+    if (!this._state.isActive || this._state.isPaused) return;
+    this.updateState({ isPaused: true, isActive: false });
     // Record elapsed so we can resume
-    this.pausedElapsedMs = performance.now() - this.startTimeMs
-    this.clearTick()
+    this.pausedElapsedMs = performance.now() - this.startTimeMs;
+    this.clearTick();
   }
 
   resume(): void {
-    if (!this._state.isPaused) return
-    this._state.isPaused = false
-    this._state.isActive = true
-    this.startTimeMs = performance.now() - this.pausedElapsedMs
-    this.pausedElapsedMs = 0
-    this.scheduleTick()
+    if (!this._state.isPaused) return;
+    this.updateState({ isPaused: false, isActive: true });
+    this.startTimeMs = performance.now() - this.pausedElapsedMs;
+    this.pausedElapsedMs = 0;
+    this.scheduleTick();
   }
 
   setBpm(newBpm: number): void {
-    if (!Number.isFinite(newBpm) || newBpm <= 0) return
-    this._state.currentBpm = newBpm
-    this.recalculateDurations()
+    if (!Number.isFinite(newBpm) || newBpm <= 0) return;
+    this.updateState({ currentBpm: newBpm });
+    this.recalculateDurations();
     // keep the current progress consistent by adjusting startTime
     // compute elapsed and make it consistent with new durations
-    const elapsed = performance.now() - this.startTimeMs
-    const progress = this.findPositionFromElapsed(elapsed)
+    const elapsed = performance.now() - this.startTimeMs;
+    const progress = this.findPositionFromElapsed(elapsed);
     // reset startTime so that subsequent ticks use the same elapsed baseline
-    this.startTimeMs = performance.now() - progress.elapsedMs
+    this.startTimeMs = performance.now() - progress.elapsedMs;
   }
 
   // --- internal helpers ---
   private recalculateDurations(): void {
-    const bpm = this._state.currentBpm
-    const lines = this.parsedSong?.lines || []
-    this.lineDurationsMs = lines.map(line => {
-      const chordCount = line?.metadata?.chordCount ?? 0
-      return calculateLineDuration(bpm, chordCount, this.beatsPerChord)
-    })
+    const bpm = this._state.currentBpm;
+    const lines = this.parsedSong?.lines || [];
+    this.lineDurationsMs = lines.map((line) => {
+      const chordCount = line?.metadata?.chordCount ?? 0;
+      return calculateLineDuration(bpm, chordCount, this.beatsPerChord);
+    });
 
     // compute cumulative ends
-    this.cumulativeLineEndsMs = []
-    let acc = 0
+    this.cumulativeLineEndsMs = [];
+    let acc = 0;
     for (const d of this.lineDurationsMs) {
-      acc += d
-      this.cumulativeLineEndsMs.push(acc)
+      acc += d;
+      this.cumulativeLineEndsMs.push(acc);
     }
   }
 
   private scheduleTick(): void {
-    if (this.rafId != null) return
+    if (this.rafId != null) return;
     const loop = () => {
-      this.rafId = requestAnimationFrame(loop)
-      this.tick()
-    }
-    this.rafId = requestAnimationFrame(loop)
+      this.rafId = requestAnimationFrame(loop);
+      this.tick();
+    };
+    this.rafId = requestAnimationFrame(loop);
   }
 
   private clearTick(): void {
     if (this.rafId != null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
   }
 
   private tick(): void {
-    if (!this._state.isActive) return
+    if (!this._state.isActive) return;
 
-    const now = performance.now()
-    const elapsed = Math.max(0, now - this.startTimeMs)
+    const now = performance.now();
+    const elapsed = Math.max(0, now - this.startTimeMs);
 
-    const { lineIndex, chordIndex } = this.findPositionFromElapsed(elapsed)
+    const { lineIndex, chordIndex } = this.findPositionFromElapsed(elapsed);
 
     // update state only when changed
-    if (lineIndex !== this._state.activeLineIndex) {
-      this._state.activeLineIndex = lineIndex
-    }
-    if (chordIndex !== this._state.activeChordIndex) {
-      this._state.activeChordIndex = chordIndex
+    if (
+      lineIndex !== this._state.activeLineIndex ||
+      chordIndex !== this._state.activeChordIndex
+    ) {
+      this.updateState({
+        activeLineIndex: lineIndex,
+        activeChordIndex: chordIndex,
+      });
     }
 
     // If we've reached the end, stop the engine
     const totalDuration = this.cumulativeLineEndsMs.length
       ? this.cumulativeLineEndsMs[this.cumulativeLineEndsMs.length - 1]
-      : 0
+      : 0;
     if (totalDuration > 0 && elapsed >= totalDuration) {
-      this.stop()
+      this.stop();
     }
   }
 

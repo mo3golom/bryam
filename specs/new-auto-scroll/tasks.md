@@ -32,7 +32,7 @@
     -   _Requirements: 3.2, 4.3_
 
 ### Phase 3: UI Integration & Visual State
-- [ ] 6. **Integrate `TempoScrollEngine` into `SongViewer.svelte`**
+- [x] 6. **Integrate `TempoScrollEngine` into `SongViewer.svelte`**
     -   In `SongViewer.svelte`, instantiate the `TempoScrollEngine` using the `songData`.
     -   Use Svelte 5 runes (`$state`, `$derived`) to reactively connect the component's view to the engine's state properties.
     -   _Requirements: 3.1, 3.2_

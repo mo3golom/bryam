@@ -1,11 +1,9 @@
 <script lang="ts">
+  import { TempoScrollEngine } from "$lib/utils/TempoScrollEngine.js";
   import { parseChordPro, type ParsedSong } from "$lib/utils/chordpro.js";
   import type { Song } from "$lib/types.js";
 
-  const DEFAULT_SPEED = 0.25;
-  const MIN_SPEED = 0.25;
-  const MAX_SPEED = 4;
-  const SPEED_INCREMENT = 0.25;
+  const DEFAULT_BPM = 120;
 
   interface Props {
     songData: Song;
@@ -22,47 +20,18 @@
     }
     return data;
   });
-  let autoScrollEnabled: boolean = $state(false);
-  let scrollSpeed = $state(DEFAULT_SPEED);
+
+  // Instantiate the engine
+  const engine = new TempoScrollEngine(parsedSong, DEFAULT_BPM);
+
+  // Expose engine's state to Svelte's reactivity
+  const engineState = engine.stateStore;
 
   // Check if content is empty or whitespace only
-  let isEmpty = $derived(!songData.body || songData.body.trim() === '');
-  let hasError = $derived(parsedSong.error || (parsedSong.lines.length === 0 && !isEmpty));
-
-  $effect(() => {
-    let frameId: number;
-
-    function scrollLoop() {
-      window.scrollBy(0, scrollSpeed);
-      frameId = requestAnimationFrame(scrollLoop);
-    }
-
-    if (autoScrollEnabled) {
-      frameId = requestAnimationFrame(scrollLoop);
-    }
-
-    return () => {
-      cancelAnimationFrame(frameId);
-    };
-  });
-
-  function startAutoScroll() {
-    scrollSpeed = DEFAULT_SPEED;
-    autoScrollEnabled = true;
-  }
-
-  function stopAutoScroll() {
-    autoScrollEnabled = false;
-    scrollSpeed = DEFAULT_SPEED;
-  }
-
-  function increaseSpeed() {
-    scrollSpeed = Math.min(MAX_SPEED, scrollSpeed + SPEED_INCREMENT);
-  }
-
-  function decreaseSpeed() {
-    scrollSpeed = Math.max(MIN_SPEED, scrollSpeed - SPEED_INCREMENT);
-  }
+  let isEmpty = $derived(!songData.body || songData.body.trim() === "");
+  let hasError = $derived(
+    parsedSong.error || (parsedSong.lines.length === 0 && !isEmpty)
+  );
 </script>
 
 <article role="main" aria-labelledby="song-title">
@@ -143,11 +112,11 @@
     class="dock max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-sm bg-transparent"
   >
     <div>
-      {#if !autoScrollEnabled}
+      {#if !$engineState.isActive && !$engineState.isPaused}
         <button
           class="btn btn-primary btn-ghost btn-circle"
-          aria-label="auto scroll"
-          onclick={startAutoScroll}
+          aria-label="Start auto scroll"
+          onclick={() => engine.start()}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -168,19 +137,9 @@
         <div class="join">
           <button
             class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="backward"
-            onclick={decreaseSpeed}
-            disabled={scrollSpeed <= MIN_SPEED}
-          >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
-          </svg>
-          
-          </button>
-          <button
-            class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="stop"
-            onclick={stopAutoScroll}
+            aria-label="Pause"
+            onclick={() => engine.pause()}
+            disabled={$engineState.isPaused}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -199,9 +158,8 @@
           </button>
           <button
             class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="forward"
-            onclick={increaseSpeed}
-            disabled={scrollSpeed >= MAX_SPEED}
+            aria-label="Stop"
+            onclick={() => engine.stop()}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -214,7 +172,28 @@
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
+                d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"
+              />
+            </svg>
+          </button>
+          <button
+            class="btn btn-square btn-primary btn-ghost join-item"
+            aria-label="Resume"
+            onclick={() => engine.resume()}
+            disabled={!$engineState.isPaused}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
               />
             </svg>
           </button>
