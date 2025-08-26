@@ -19,13 +19,13 @@
     -   Define a public state object with properties: `isActive`, `isPaused`, `currentBpm`, `activeLineIndex`, and `activeChordIndex`.
     -   _Requirements: 3.1, 3.2, 3.5_
 
-- [ ] 4. **Implement Engine's Internal Timer**
+- [x] 4. **Implement Engine's Internal Timer**
     -   Use a `requestAnimationFrame` loop to drive the engine's timing logic for smooth, efficient updates.
     -   Calculate elapsed time on each frame using `performance.now()` to prevent timing drift from browser lag or tab throttling.
     -   Implement the logic to advance the `activeLineIndex` and `activeChordIndex` based on the calculated elapsed time and the pre-calculated duration of each line.
     -   _Requirements: 3.2, 4.1_
 
-- [ ] 5. **Develop Unit Tests for `TempoScrollEngine`**
+- [x] 5. **Develop Unit Tests for `TempoScrollEngine`**
     -   Create a corresponding test file: `src/lib/utils/TempoScrollEngine.test.ts`.
     -   Write Vitest unit tests to verify the engine's state transitions (e.g., `start` sets `isActive` to true).
     -   Using `vi.useFakeTimers()`, write tests that advance time and assert that `activeLineIndex` and `activeChordIndex` update correctly based on a mock song structure and BPM.
