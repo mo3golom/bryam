@@ -1,5 +1,6 @@
 export interface ChordLyricPair {
   chord: string | null
+  chordPosition: number | null
   word: string
 }
 
@@ -23,7 +24,7 @@ export interface ParsedSong {
  */
 export function parseChordPro(text: string): ParsedSong {
   if (!text || typeof text !== 'string') {
-  return { lines: [] }
+    return { lines: [] }
   }
 
   const lines = text.split('\n')
@@ -31,11 +32,9 @@ export function parseChordPro(text: string): ParsedSong {
 
   for (const line of lines) {
     const parts: ChordLyricPair[] = []
-    
+
     // Handle empty lines
     if (line.trim() === '') {
-      parts.push({ chord: null, word: '' })
-      parsedLines.push({ parts, metadata: { chordCount: 0 } })
       continue
     }
 
@@ -43,7 +42,7 @@ export function parseChordPro(text: string): ParsedSong {
     const chordRegex = /\[([^\]]*)\]/g
     let lastIndex = 0
     let match
-
+    let chordPosition = 0
     while ((match = chordRegex.exec(line)) !== null) {
       const chordStart = match.index
       const chordEnd = chordRegex.lastIndex
@@ -58,7 +57,7 @@ export function parseChordPro(text: string): ParsedSong {
       if (chordStart > lastIndex) {
         const textBefore = line.substring(lastIndex, chordStart)
         if (textBefore) {
-          parts.push({ chord: null, word: textBefore })
+          parts.push({ chord: null, chordPosition: null, word: textBefore })
         }
       }
 
@@ -67,26 +66,28 @@ export function parseChordPro(text: string): ParsedSong {
       const wordMatch = remainingText.match(/^(\S*)/)
       const word = wordMatch ? wordMatch[1] : ''
 
-      parts.push({ chord, word })
+      parts.push({ chord, chordPosition, word })
       lastIndex = chordEnd + word.length
+      chordPosition++
     }
 
     // Add any remaining text after the last chord
     if (lastIndex < line.length) {
       const remainingText = line.substring(lastIndex)
       if (remainingText) {
-        parts.push({ chord: null, word: remainingText })
+        parts.push({ chord: null, chordPosition: null, word: remainingText })
       }
     }
 
     // If no chords were found, treat the entire line as lyrics
     if (parts.length === 0) {
-      parts.push({ chord: null, word: line })
+      parts.push({ chord: null, chordPosition: null, word: line })
     }
 
-  // Count chords in this line (parts where chord !== null)
-  const chordCount = parts.filter(p => p.chord).length
-  parsedLines.push({ parts, metadata: { chordCount } })
+    // Count chords in this line (parts where chord !== null)
+    if (chordPosition > 0) {
+      parsedLines.push({ parts, metadata: { chordCount: chordPosition } })
+    }
   }
 
   return { lines: parsedLines }

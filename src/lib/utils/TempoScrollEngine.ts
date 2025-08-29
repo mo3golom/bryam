@@ -5,6 +5,7 @@
  * It exposes a simple public API and a snapshot-style `state` getter that can be
  * observed by UI code (for example a Svelte component).
  */
+import { get } from 'svelte/store'
 import type { ParsedSong } from './chordpro'
 
 export interface TempoScrollEngineState {
@@ -14,6 +15,8 @@ export interface TempoScrollEngineState {
   activeLineIndex: number
   activeChordIndex: number
 }
+
+const log = (...args: any[]) => console.log('[TempoScrollEngine]', ...args)
 
 export class TempoScrollEngine {
   private parsedSong: ParsedSong
@@ -28,10 +31,12 @@ export class TempoScrollEngine {
 
   // internal mutable state
   private _state: TempoScrollEngineState
+  private onStateChange: (state: TempoScrollEngineState) => void
 
-  constructor(parsedSong: ParsedSong, initialBpm = 120, beatsPerChord = 4) {
+  constructor(parsedSong: ParsedSong, onStateChange: (state: TempoScrollEngineState) => void, initialBpm = 120, beatsPerChord = 4) {
     this.parsedSong = parsedSong
     this.beatsPerChord = beatsPerChord
+    this.onStateChange = onStateChange
 
     this._state = {
       isActive: false,
@@ -41,71 +46,128 @@ export class TempoScrollEngine {
       activeChordIndex: 0
     }
 
+    log('Engine initialized with BPM:', initialBpm, 'Beats per chord:', beatsPerChord)
     this.recalculateDurations()
   }
 
-  // Public read-only view of the mutable state (returns the live object)
-  get state(): TempoScrollEngineState {
-    return this._state
-  }
 
   // Controls
   start(): void {
+    log('Attempting to start engine. Current state:', this._state)
     if (this._state.isActive && !this._state.isPaused) return
 
     this._state.isActive = true
     this._state.isPaused = false
+    this.onStateChange(this._state)
 
     // If we previously paused, resume from pausedElapsedMs
     this.startTimeMs = performance.now() - this.pausedElapsedMs
     this.pausedElapsedMs = 0
 
     this.scheduleTick()
+    log('Engine started. Start time:', this.startTimeMs)
   }
 
   stop(): void {
+    log('Attempting to stop engine. Current state:', this._state)
     this._state.isActive = false
     this._state.isPaused = false
     this._state.activeLineIndex = 0
     this._state.activeChordIndex = 0
+    this.onStateChange(this._state)
 
     this.clearTick()
     this.startTimeMs = 0
     this.pausedElapsedMs = 0
+    log('Engine stopped and reset.')
   }
 
   pause(): void {
     if (!this._state.isActive || this._state.isPaused) return
+    log('Pausing engine. Current state:', this._state)
     this._state.isPaused = true
     this._state.isActive = false
+    this.onStateChange(this._state)
     // Record elapsed so we can resume
     this.pausedElapsedMs = performance.now() - this.startTimeMs
     this.clearTick()
   }
 
   resume(): void {
+    log('Attempting to resume engine. Current state:', this._state)
     if (!this._state.isPaused) return
     this._state.isPaused = false
     this._state.isActive = true
+    this.onStateChange(this._state)
     this.startTimeMs = performance.now() - this.pausedElapsedMs
     this.pausedElapsedMs = 0
     this.scheduleTick()
+    log('Engine resumed. New start time:', this.startTimeMs)
   }
 
   setBpm(newBpm: number): void {
+    log('Attempting to set BPM to:', newBpm, 'Current BPM:', this._state.currentBpm)
     if (!Number.isFinite(newBpm) || newBpm <= 0) return
+    
+    // Preserve current position before changing BPM
+    const currentLineIndex = this._state.activeLineIndex
+    const currentChordIndex = this._state.activeChordIndex
+    
     this._state.currentBpm = newBpm
+    this.onStateChange(this._state)
     this.recalculateDurations()
-    // keep the current progress consistent by adjusting startTime
-    // compute elapsed and make it consistent with new durations
-    const elapsed = performance.now() - this.startTimeMs
-    const progress = this.findPositionFromElapsed(elapsed)
-    // reset startTime so that subsequent ticks use the same elapsed baseline
-    this.startTimeMs = performance.now() - progress.elapsedMs
+    
+    // Calculate elapsed time to current position with new durations
+    let elapsedToCurrentPosition = 0
+    
+    // Add time for completed lines
+    for (let i = 0; i < currentLineIndex; i++) {
+      elapsedToCurrentPosition += this.lineDurationsMs[i] || 0
+    }
+    
+    // Add time for current chord within current line
+    const currentLineDuration = this.lineDurationsMs[currentLineIndex] || 0
+    const currentLineChordCount = this.parsedSong?.lines?.[currentLineIndex]?.metadata?.chordCount ?? 0
+    if (currentLineChordCount > 0 && currentLineDuration > 0) {
+      const chordDuration = currentLineDuration / currentLineChordCount
+      elapsedToCurrentPosition += currentChordIndex * chordDuration
+    }
+    
+    // Adjust startTime to maintain current position with new speed
+    this.startTimeMs = performance.now() - elapsedToCurrentPosition
+    
+    log('BPM set to:', newBpm, 'Maintaining position at line:', currentLineIndex, 'chord:', currentChordIndex, 'Adjusted start time:', this.startTimeMs)
+  }
+
+  jumpToLine(lineIndex: number): void {
+    log('Attempting to jump to line:', lineIndex)
+    if (lineIndex < 0 || lineIndex >= this.parsedSong.lines.length) {
+      log('Invalid line index:', lineIndex, 'Valid range: 0 to', this.parsedSong.lines.length - 1)
+      return
+    }
+
+    // Update state to new line
+    this._state.activeLineIndex = lineIndex
+    this._state.activeChordIndex = 0 // Reset to first chord of the line
+    this.onStateChange(this._state)
+
+    // If engine is active, adjust timing to continue from new position
+    if (this._state.isActive) {
+      // Calculate elapsed time to the new position
+      let elapsedToNewPosition = 0
+      for (let i = 0; i < lineIndex; i++) {
+        elapsedToNewPosition += this.lineDurationsMs[i] || 0
+      }
+      
+      // Adjust start time so that the new position becomes "now"
+      this.startTimeMs = performance.now() - elapsedToNewPosition
+      log('Jumped to line:', lineIndex, 'Adjusted start time:', this.startTimeMs)
+    }
   }
 
   // --- internal helpers ---
   private recalculateDurations(): void {
+    log('Recalculating line durations...')
     const bpm = this._state.currentBpm
     const lines = this.parsedSong?.lines || []
     this.lineDurationsMs = lines.map(line => {
@@ -120,9 +182,11 @@ export class TempoScrollEngine {
       acc += d
       this.cumulativeLineEndsMs.push(acc)
     }
+    log('Durations recalculated. Line durations:', this.lineDurationsMs, 'Cumulative ends:', this.cumulativeLineEndsMs)
   }
 
   private scheduleTick(): void {
+    log('Scheduling next tick...')
     if (this.rafId != null) return
     const loop = () => {
       this.rafId = requestAnimationFrame(loop)
@@ -133,6 +197,7 @@ export class TempoScrollEngine {
 
   private clearTick(): void {
     if (this.rafId != null) {
+      log('Clearing scheduled tick (rafId:', this.rafId, ')')
       cancelAnimationFrame(this.rafId)
       this.rafId = null
     }
@@ -147,11 +212,20 @@ export class TempoScrollEngine {
     const { lineIndex, chordIndex } = this.findPositionFromElapsed(elapsed)
 
     // update state only when changed
+    let stateChanged = false
     if (lineIndex !== this._state.activeLineIndex) {
+      log('Line index changed from', this._state.activeLineIndex, 'to', lineIndex)
       this._state.activeLineIndex = lineIndex
+      stateChanged = true
     }
     if (chordIndex !== this._state.activeChordIndex) {
+      log('Chord index changed from', this._state.activeChordIndex, 'to', chordIndex)
       this._state.activeChordIndex = chordIndex
+      stateChanged = true
+    }
+
+    if (stateChanged) {
+      this.onStateChange(this._state)
     }
 
     // If we've reached the end, stop the engine
@@ -159,6 +233,7 @@ export class TempoScrollEngine {
       ? this.cumulativeLineEndsMs[this.cumulativeLineEndsMs.length - 1]
       : 0
     if (totalDuration > 0 && elapsed >= totalDuration) {
+      log('Reached end of song (elapsed:', elapsed, 'total duration:', totalDuration, '). Stopping engine.')
       this.stop()
     }
   }
@@ -192,8 +267,6 @@ export class TempoScrollEngine {
 export function calculateLineDuration(bpm: number, chordCount: number, beatsPerChord = 4): number {
   const safeChordCount = Math.max(0, Math.floor(chordCount || 0))
   if (safeChordCount === 0) return 0
-  const minutesPerBeat = 1 / bpm
-  const beatsTotal = safeChordCount * beatsPerChord
-  const durationMs = beatsTotal * minutesPerBeat * 60 * 1000
-  return Math.max(0, durationMs)
+  const secondsPerChord = beatsPerChord * 60 / bpm
+  return Math.max(0, safeChordCount * (secondsPerChord * 1000))
 }

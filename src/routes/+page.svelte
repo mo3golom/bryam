@@ -30,17 +30,17 @@
     <header class="mb-6 text-center">
       <h1
         id="daily-quiz-heading"
-        class="text-3xl md:text-4xl font-bold text-main-font "
+        class="text-4xl font-bold text-main-font"
       >
         <p
-          class="bg-primary text-primary-content w-max p-2 pl-4 pr-4 rounded-full mx-auto -rotate-5 translate-y-2 whitespace-nowrap"
+          class=" relative bg-primary text-primary-content min-w-30 w-max p-2 pl-4 pr-4 rounded-full mx-auto -rotate-5 translate-y-2 whitespace-nowrap z-10"
         >
-          Ukulele Songs
+          Брям
         </p>
         <p
-        class="bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap"
+        class="relative bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap z-20"
       >
-        chords for you
+        аккорды для укулеле
       </p>
       </h1>
     </header>

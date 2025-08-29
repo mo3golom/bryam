@@ -2,13 +2,33 @@
   import { parseChordPro, type ParsedSong } from "$lib/utils/chordpro.js";
   import type { Song } from "$lib/types.js";
   import { TempoScrollEngine } from "$lib/utils/TempoScrollEngine";
-  import BpmController from '$lib/components/BpmController.svelte';
-
-  const DEFAULT_BPM = 120;
+  import type { TempoScrollEngineState } from "$lib/utils/TempoScrollEngine";
 
   interface Props {
     songData: Song;
   }
+
+  const DEFAULT_BPM = 120;
+  const MIN_TEXT_SIZE = 12;
+  const MAX_TEXT_SIZE = 32;
+  const DEFAULT_TEXT_SIZE = 14;
+  // Callback function for engine state changes
+  const onEngineStateChange = (state: TempoScrollEngineState) => {
+    scrollActiveLineIndex = state.activeLineIndex;
+    scrollActiveChordIndex = state.activeChordIndex;
+    scrollCurrentBpm = state.currentBpm;
+    scrollIsActive = state.isActive;
+    scrollIsPaused = state.isPaused;
+  };
+  // Asymmetric fade configuration
+  const fadeConfig = {
+    upperStrength: 2.0, // Stronger fade for past lines
+    lowerStrength: 1.0, // Gentler fade for future lines
+    minOpacity: 0.1, // Minimum opacity threshold
+  };
+  // Calculate fade coefficients based on strength
+  const upperFadeCoeff = Math.pow(0.7, fadeConfig.upperStrength); // ~0.49
+  const lowerFadeCoeff = Math.pow(0.7, fadeConfig.lowerStrength); // ~0.7
 
   let { songData }: Props = $props();
   let parsedSong: ParsedSong = $derived.by(() => {
@@ -21,174 +41,168 @@
     }
     return data;
   });
-  // Remove old auto-scroll state
-  let autoScrollEnabled: boolean = $state(false);
-  // Track whether playback has been started at least once (for smart scroll start)
-  let hasStartedOnce: boolean = $state(false);
-
-  // Instantiate the TempoScrollEngine with parsedSong and default BPM
+  // Instantiate the TempoScrollEngine with parsedSong, callback, and default BPM
   let engine = $derived.by(() => {
     if (!parsedSong || !parsedSong.lines || parsedSong.lines.length === 0) return null;
-    return new TempoScrollEngine(parsedSong, DEFAULT_BPM);
+    return new TempoScrollEngine(parsedSong, onEngineStateChange, DEFAULT_BPM);
   });
+  // Check if content is empty or whitespace only
+  let isEmpty = $derived(!songData.body || songData.body.trim() === "");
+  let hasError = $derived(parsedSong.error || (parsedSong.lines.length === 0 && !isEmpty));
 
-  // Bind engine state to Svelte runes
-  let engineState = $derived(() => engine ? engine.state : null);
+  let scrollActiveLineIndex = $state(0);
+  let scrollActiveChordIndex = $state(0);
+  let scrollCurrentBpm = $state(DEFAULT_BPM);
+  let scrollIsActive = $state(false);
+  let scrollIsPaused = $state(false);
+  // Text size configuration
+  let textSize: number = $state(DEFAULT_TEXT_SIZE);
 
   // Scroll the active line into view when the engine's activeLineIndex changes
   $effect(() => {
-    // Guard for SSR
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
 
-    const activeIndex = engineState()?.activeLineIndex ?? -1;
-    if (activeIndex < 0) return;
+    if (scrollActiveLineIndex) {
+      console.log("Active line index changed:", scrollActiveLineIndex);
 
-    // Only perform auto-scrolling when the auto-scroll feature is enabled
-    if (!autoScrollEnabled) return;
+      if (scrollActiveLineIndex < 0) return;
 
-    const selector = `[data-line-index="${activeIndex}"]`;
-    const el = document.querySelector(selector) as HTMLElement | null;
-    if (!el) return;
+      const selector = `[data-line-index="${scrollActiveLineIndex}"]`;
+      const el = document.querySelector(selector) as HTMLElement | null;
+      if (!el) return;
 
-    // Smoothly center the active line in the viewport
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Smoothly center the active line in the viewport
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   });
 
+  // Function to get line style based on scroll state and position
+  function getLineStyle(lineIndex: number): string {
+    const fontSize = `font-size: ${textSize}pt;`;
 
-  // Check if content is empty or whitespace only
-  let isEmpty = $derived(!songData.body || songData.body.trim() === '');
-  let hasError = $derived(parsedSong.error || (parsedSong.lines.length === 0 && !isEmpty));
+    if (!scrollIsActive || scrollIsPaused) {
+      return `opacity: 1.0; ${fontSize}`; // Default opacity when not scrolling
+    }
 
-  // Remove old pixel-based auto-scroll logic and controls
-  function startAutoScroll() {
-    if (engine) engine.start();
-    autoScrollEnabled = true;
+    const opacity = calculateLineOpacity(lineIndex, scrollActiveLineIndex);
+    const isActive = lineIndex === scrollActiveLineIndex;
+    const fontWeight = isActive ? "bold" : "normal";
+
+    return `opacity: ${opacity}; font-weight: ${fontWeight}; ${fontSize}`;
   }
 
-  function stopAutoScroll() {
-  if (engine) engine.stop();
-  // disabling auto-scroll UI when stopped
-  autoScrollEnabled = false;
+  // Function to calculate line opacity based on distance from active line
+  function calculateLineOpacity(lineIndex: number, activeIndex: number): number {
+    if (lineIndex === activeIndex) {
+      return 1.0; // Active line is fully opaque
+    }
+
+    const distance = lineIndex - activeIndex;
+    let opacity: number;
+
+    if (distance < 0) {
+      // Upper lines (past) - stronger fade
+      const absDistance = Math.abs(distance);
+      opacity = Math.max(fadeConfig.minOpacity, Math.pow(upperFadeCoeff, absDistance));
+    } else {
+      // Lower lines (future) - gentler fade
+      opacity = Math.max(fadeConfig.minOpacity, Math.pow(lowerFadeCoeff, distance));
+    }
+
+    return opacity;
+  }
+
+  // Function to check if an element is visible in the viewport
+  function isElementVisible(element: HTMLElement): boolean {
+    const rect = element.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    const windowWidth = window.innerWidth || document.documentElement.clientWidth;
+
+    return rect.top >= 0 && rect.left >= 0 && rect.bottom <= windowHeight && rect.right <= windowWidth;
+  }
+
+  async function startAutoScroll() {
+    if (!engine) return;
+
+    const activeLineElement = document.querySelector(`[data-line-index="${scrollActiveLineIndex}"]`) as HTMLElement | null;
+
+    if (activeLineElement && !isElementVisible(activeLineElement)) {
+      // Scroll to the active line first, preferably to center
+      activeLineElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Wait for scroll animation to complete before starting auto-scroll
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    // Now start the auto-scroll engine
+    engine.start();
+  }
+
+  function pauseAutoScroll() {
+    if (engine) engine.pause();
+  }
+
+  function restartAutoScroll() {
+    if (!engine) return;
+    engine.stop();
+    engine.setBpm(DEFAULT_BPM);
+    engine.start();
+  }
+
+  // Handle clicking on a song line during autoscroll
+  function handleLineClick(lineIndex: number) {
+    if (!engine) return;
+
+    // Only handle clicks when autoscroll is active
+    if (scrollIsActive && !scrollIsPaused) {
+      console.log("Line clicked during autoscroll:", lineIndex);
+
+      // Jump to the clicked line and continue scrolling from there
+      engine.jumpToLine(lineIndex);
+
+      // The scroll position will be updated by the $effect that watches scrollActiveLineIndex
+      // No need to manually scroll here as the effect will handle it
+    }
   }
 
   function increaseSpeed() {
-    if (engine && engine.state.currentBpm < 300) engine.setBpm(engine.state.currentBpm + 5);
+    if (engine && scrollCurrentBpm < 300) engine.setBpm(scrollCurrentBpm + 10);
   }
 
   function decreaseSpeed() {
-    if (engine && engine.state.currentBpm > 30) engine.setBpm(engine.state.currentBpm - 5);
+    if (engine && scrollCurrentBpm > 30) engine.setBpm(scrollCurrentBpm - 10);
   }
 
-  // Pause the engine but keep auto-scroll enabled so user can resume
-  function pauseAutoScroll() {
-    if (!engine) return;
-    if (engine.state.isActive && !engine.state.isPaused) {
-      engine.pause();
+  function increaseTextSize() {
+    if (textSize < MAX_TEXT_SIZE) {
+      textSize += 2;
     }
   }
 
-  // Track when user manually paused the auto-scroll via wheel/touch interaction
-  let manualPaused: boolean = $state(false);
-
-  // When the user manually scrolls (wheel or touch), pause the engine
-  function handleManualScroll(_event: Event) {
-    if (!engine) return;
-    // Only act if the engine is currently playing
-    if (engine.state.isActive && !engine.state.isPaused) {
-      engine.pause();
-      manualPaused = true;
-      // Keep autoScrollEnabled true so the Resume UI is available
-      autoScrollEnabled = true;
+  function decreaseTextSize() {
+    if (textSize > MIN_TEXT_SIZE) {
+      textSize -= 2;
     }
-  }
-
-  // Resume after a manual pause initiated by user interaction
-  function resumeFromManual() {
-    if (!engine) return;
-    if (engine.state.isPaused) {
-      if (typeof engine.resume === 'function') engine.resume();
-      else engine.start();
-    }
-    manualPaused = false;
-    autoScrollEnabled = true;
-  }
-
-  // Resume playback if the engine was paused
-  function resumeAutoScroll() {
-    if (!engine) return;
-    if (engine.state.isPaused) {
-      // Prefer resume() when available, otherwise start()
-      if (typeof engine.resume === 'function') engine.resume();
-      else engine.start();
-    } else if (!engine.state.isActive) {
-      engine.start();
-    }
-    autoScrollEnabled = true;
-  }
-
-  // Smart start: on the very first play, scroll the first line into view before starting
-  // This ensures the song is positioned correctly when playback begins (Task 11)
-  function smartStartIfFirstPlay() {
-    if (hasStartedOnce) return false;
-    // Guard for SSR
-    if (typeof document === 'undefined') return false;
-
-    const firstLine = document.querySelector('[data-line-index="0"]') as HTMLElement | null;
-    if (!firstLine) return false;
-
-    // Smoothly center the first line
-    firstLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Mark that we've performed the initial start scroll so it won't repeat
-    hasStartedOnce = true;
-
-    // Delay starting the engine slightly to allow the smooth scroll to begin
-    // 300ms is a reasonable compromise between responsiveness and allowing the animation
-    setTimeout(() => {
-      if (!engine) return;
-      if (engine.state.isPaused) {
-        if (typeof engine.resume === 'function') engine.resume();
-        else engine.start();
-      } else if (!engine.state.isActive) {
-        engine.start();
-      }
-      autoScrollEnabled = true;
-    }, 300);
-
-    return true;
   }
 </script>
 
 <article role="main" aria-labelledby="song-title">
   <!-- Song Header -->
   <header class="mb-6 text-center">
-    <h1
-      id="song-title"
-      class="text-3xl md:text-4xl font-bold text-main-font"
-    >
-      <p
-        class="bg-primary text-primary-content w-max p-2 pl-4 pr-4 rounded-full mx-auto -rotate-5 translate-y-2 whitespace-nowrap"
-      >
+    <h1 id="song-title" class="text-3xl md:text-4xl font-bold text-main-font">
+      <p class="relative z-10 bg-primary text-primary-content w-max p-2 pl-4 pr-4 rounded-full mx-auto -rotate-5 translate-y-2 whitespace-nowrap">
         {songData.title}
       </p>
     </h1>
     {#if songData.artist}
-      <p
-        id="song-artist"
-        class="bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap"
-      >
+      <p id="song-artist" class="relative z-20 text-main-font bg-primary text-primary-content text-sm w-max p-2 pl-4 pr-4 rounded-full mx-auto whitespace-nowrap">
         {songData.artist}
       </p>
     {/if}
   </header>
 
   <!-- Song Content -->
-  <section
-    class="song-content pb-20"
-    aria-label="Song lyrics and chords"
-    onwheel={handleManualScroll}
-    ontouchstart={handleManualScroll}
-  >
+  <section class="song-content pb-20" aria-label="Song lyrics and chords">
     <div class="card">
       <div class="card-body">
         {#if hasError}
@@ -203,156 +217,208 @@
         {:else}
           <div class="space-y-4">
             {#each parsedSong.lines as line, i}
-              <div
-                class="line-container"
-                class:line-past={i < (engineState()?.activeLineIndex ?? -1)}
-                class:line-active={i === (engineState()?.activeLineIndex ?? -1)}
-                class:line-upcoming={i > (engineState()?.activeLineIndex ?? -1)}
-                data-line-index={i}
-              >
-                {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
-                  <!-- Empty line for spacing -->
-                  <div class="h-4"></div>
-                {:else}
-                  <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
-                    {#each line.parts as part, j}
-                      <div class="chord-word-pair inline-block">
-                        {#if part.chord}
-                          <div
-                            class="chord text-blue-600 font-semibold text-sm leading-none mb-1 min-h-[1rem]"
-                            class:chord-active={
-                              i === (engineState()?.activeLineIndex ?? -1) && j === (engineState()?.activeChordIndex ?? -1)
-                            }
-                            aria-label="Chord: {part.chord}"
-                          >
-                            {part.chord}
+              {#if scrollIsActive && !scrollIsPaused}
+                <!-- Interactive button element during autoscroll -->
+                <div
+                  class="line-container"
+                  style={getLineStyle(i)}
+                  data-line-index={i}
+                  role="button"
+                  onclick={() => handleLineClick(i)}
+                  onkeydown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleLineClick(i);
+                    }
+                  }}
+                  tabindex={i + 1}
+                  aria-label="Jump to line {i + 1}"
+                >
+                  {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
+                    <!-- Empty line for spacing -->
+                    <div class="h-4"></div>
+                  {:else}
+                    <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
+                      {#each line.parts as part}
+                        <div class="chord-word-pair inline-block">
+                          {#if part.chord}
+                            <div
+                              class="chord text-blue-600 font-semibold leading-none mb-1 min-h-[1rem]"
+                              class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
+                              aria-label="Chord: {part.chord}"
+                            >
+                              {part.chord}
+                            </div>
+                          {:else}
+                            <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
+                          {/if}
+                          <div class="word text-gray-900 leading-tight">
+                            {part.word}
                           </div>
-                        {:else}
-                          <div
-                            class="chord-spacer min-h-[1rem] mb-1"
-                            aria-hidden="true"
-                          ></div>
-                        {/if}
-                        <div class="word text-gray-900 text-base leading-tight">
-                          {part.word}
                         </div>
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {:else}
+                <!-- Non-interactive element when autoscroll is not active -->
+                <div class="line-container" style={getLineStyle(i)} data-line-index={i}>
+                  {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
+                    <!-- Empty line for spacing -->
+                    <div class="h-4"></div>
+                  {:else}
+                    <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
+                      {#each line.parts as part}
+                        <div class="chord-word-pair inline-block">
+                          {#if part.chord}
+                            <div
+                              class="chord text-blue-600 font-semibold leading-none mb-1 min-h-[1rem]"
+                              class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
+                              aria-label="Chord: {part.chord}"
+                            >
+                              {part.chord}
+                            </div>
+                          {:else}
+                            <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
+                          {/if}
+                          <div class="word text-gray-900 leading-tight">
+                            {part.word}
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
             {/each}
           </div>
         {/if}
       </div>
     </div>
   </section>
-  {#if manualPaused}
-    <!-- Resume overlay when user manually paused scrolling -->
-    <div class="resume-overlay" role="status" aria-live="polite">
-      <button class="btn btn-primary resume-btn" onclick={resumeFromManual} aria-label="Resume auto-scroll">
-        Resume
-      </button>
-    </div>
-  {/if}
-  <div
-    class="dock max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] backdrop-blur-sm bg-transparent"
-  >
-    <div>
-      {#if engineState() === null}
-        <!-- No engine yet, show disabled play button -->
-        <button class="btn btn-primary btn-ghost btn-circle" aria-label="auto scroll" disabled>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-          </svg>
-        </button>
-      {:else}
+  <div class="dock border-0 max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] bg-primary-content drop-shadow-xl drop-shadow-primary-content">
+    <div class="relative">
+      {#if scrollIsActive && !scrollIsPaused}
+        <div class="absolute -top-6 left-1/2 -translate-x-1/2 rounded-3xl p-1 pl-2 pr-2 bg-primary-content text-main-font">{scrollCurrentBpm}&nbsp;BPM</div>
         <div class="join">
           <!-- Decrease BPM -->
-          <button
-            class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="decrease-bpm"
-            onclick={decreaseSpeed}
-            disabled={(engineState()?.currentBpm ?? 0) <= 30}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061A1.125 1.125 0 0 1 21 8.689v8.122ZM11.25 16.811c0 .864-.933 1.406-1.683.977l-7.108-4.061a1.125 1.125 0 0 1 0-1.954l7.108-4.061a1.125 1.125 0 0 1 1.683.977v8.122Z" />
-            </svg>
+          <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="decrease-bpm" onclick={decreaseSpeed} disabled={(scrollCurrentBpm ?? 0) <= 30}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-minus"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l14 0"></path></svg
+            >
           </button>
-
-          <!-- Play / Pause / Resume -->
-          {#if engineState()?.isActive && !engineState()?.isPaused}
-            <!-- Pause button -->
-            <button
-              class="btn btn-square btn-primary btn-ghost join-item"
-              aria-label="pause"
-              onclick={pauseAutoScroll}
+          <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="pause" onclick={pauseAutoScroll}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-player-pause"
+              ><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M6 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"></path><path
+                d="M14 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+              ></path></svg
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6.75h-.008v10.5h.008V6.75zM17.508 6.75h-.008v10.5h.008V6.75z" />
-              </svg>
-            </button>
-          {:else if engineState()?.isPaused}
-            <!-- Resume button -->
-            <button
-              class="btn btn-square btn-primary btn-ghost join-item"
-              aria-label="resume"
-              onclick={resumeAutoScroll}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-              </svg>
-            </button>
-          {:else}
-            <!-- Start / Play from stopped state -->
-            <button
-              class="btn btn-square btn-primary btn-ghost join-item"
-              aria-label="play"
-              onclick={() => { if (!smartStartIfFirstPlay()) resumeAutoScroll(); }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-              </svg>
-            </button>
-          {/if}
-
-          <!-- Stop button -->
-          <button
-            class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="stop"
-            onclick={stopAutoScroll}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-            </svg>
           </button>
-
+          <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="restart" onclick={restartAutoScroll}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-rotate"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5"></path></svg
+            >
+          </button>
           <!-- Increase BPM -->
-          <button
-            class="btn btn-square btn-primary btn-ghost join-item"
-            aria-label="increase-bpm"
-            onclick={increaseSpeed}
-            disabled={(engineState()?.currentBpm ?? 0) >= 300}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z" />
-            </svg>
+          <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="increase-bpm" onclick={increaseSpeed} disabled={(scrollCurrentBpm ?? 0) >= 300}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg
+            >
           </button>
         </div>
+      {:else}
+        <!-- Collapsed state - only show play button -->
+        <button class="btn btn-primary btn-ghost" aria-label="play" onclick={startAutoScroll}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-player-play"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 4v16l13 -8z"></path></svg
+          >
+        </button>
       {/if}
-      <span class="dock-label">auto scroll</span>
+      <span class="dock-label text-main-font">auto scroll</span>
     </div>
     <div>
-      <!-- BPM controller integration -->
-      {#if engineState()}
-        <BpmController
-          bpm={engineState()?.currentBpm}
-          setBpm={(n) => engine?.setBpm(n)}
-          min={30}
-          max={300}
-          step={5}
-        />
-      {/if}
+      <div class="join">
+        <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="smaller-text" onclick={decreaseTextSize} disabled={textSize <= MIN_TEXT_SIZE}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-letter-case-lower"
+            ><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M6.5 15.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0"></path><path d="M10 12v7"></path><path
+              d="M17.5 15.5m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0"
+            ></path><path d="M21 12v7"></path></svg
+          >
+        </button>
+        <button class="btn btn-square btn-primary btn-ghost join-item" aria-label="bigger-text" onclick={increaseTextSize} disabled={textSize >= MAX_TEXT_SIZE}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-letter-case-upper"
+            ><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 19v-10.5a3.5 3.5 0 0 1 7 0v10.5"></path><path d="M3 13h7"></path><path d="M14 19v-10.5a3.5 3.5 0 0 1 7 0v10.5"
+            ></path><path d="M14 13h7"></path></svg
+          >
+        </button>
+      </div>
+      <span class="dock-label text-main-font">text size</span>
     </div>
   </div>
 </article>
@@ -360,6 +426,14 @@
 <style>
   .song-content {
     font-family: "Courier New", Consolas, "Liberation Mono", monospace;
+  }
+
+  .chord {
+    font-size: 0.8em; /* Chords are 80% of the base text size */
+  }
+
+  .word {
+    font-size: 1em; /* Words inherit the full base text size */
   }
 
   .chord-word-pair {
@@ -373,47 +447,35 @@
     }
   }
 
-  /* Touch-friendly spacing for mobile */
+  /* Touch-friendly spacing for mobile and dynamic styling */
   .line-container {
     min-height: 2.5rem;
     touch-action: manipulation;
+    transition:
+      opacity 0.3s ease,
+      color 0.3s ease,
+      font-weight 0.3s ease;
   }
 
-  /* Visual states for auto-scroll */
-  .line-past {
-    opacity: 0.7;
+  /* Clickable line styling during autoscroll */
+  .line-container.clickable {
+    cursor: pointer;
+    border-radius: 0.375rem;
+    padding: 0.25rem;
+    margin: -0.25rem;
   }
 
-  .line-active {
-    opacity: 1;
+  .line-container.clickable:hover {
+    background-color: rgba(59, 130, 246, 0.1);
   }
 
-  .line-upcoming {
-    opacity: 1;
+  .line-container.clickable:focus {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
   }
 
   /* Highlight the active chord within the active line */
   .chord-active {
-    background: rgba(59, 130, 246, 0.15); /* blue-500 at low opacity */
-    border-radius: 4px;
-    padding: 0 0.125rem;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.06) inset;
-  }
-
-  /* Resume overlay shown after manual scroll/touch pauses the engine */
-  .resume-overlay {
-    position: fixed;
-    left: 50%;
-    bottom: 6.25rem; /* place above the dock */
-    transform: translateX(-50%);
-    z-index: 60;
-    pointer-events: none; /* allow underlying scroll until button is used */
-  }
-
-  .resume-overlay .resume-btn {
-    pointer-events: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    border-radius: 9999px;
+    color: blueviolet;
   }
 </style>

@@ -28,7 +28,7 @@
   }
 </script>
 
-<div class="w-full">
+<div class="w-full p-4 pt-0">
   {#if loading}
     <div class="space-y-4">
       {#each Array(3) as _}
