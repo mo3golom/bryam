@@ -21,8 +21,6 @@ const log = (...args: any[]) => console.log('[TempoScrollEngine]', ...args)
 export class TempoScrollEngine {
   private parsedSong: ParsedSong
   private beatsPerChord: number
-  private lineDurationsMs: number[] = []
-  private cumulativeLineEndsMs: number[] = []
 
   // timing
   private rafId: number | null = null
@@ -47,7 +45,6 @@ export class TempoScrollEngine {
     }
 
     log('Engine initialized with BPM:', initialBpm, 'Beats per chord:', beatsPerChord)
-    this.recalculateDurations()
   }
 
 
@@ -115,19 +112,19 @@ export class TempoScrollEngine {
     
     this._state.currentBpm = newBpm
     this.onStateChange(this._state)
-    this.recalculateDurations()
     
-    // Calculate elapsed time to current position with new durations
+    // Calculate elapsed time to current position with new BPM
     let elapsedToCurrentPosition = 0
     
     // Add time for completed lines
     for (let i = 0; i < currentLineIndex; i++) {
-      elapsedToCurrentPosition += this.lineDurationsMs[i] || 0
+      const lineChordCount = this.parsedSong?.lines?.[i]?.metadata?.chordCount ?? 0
+      elapsedToCurrentPosition += calculateLineDuration(newBpm, lineChordCount, this.beatsPerChord)
     }
     
     // Add time for current chord within current line
-    const currentLineDuration = this.lineDurationsMs[currentLineIndex] || 0
     const currentLineChordCount = this.parsedSong?.lines?.[currentLineIndex]?.metadata?.chordCount ?? 0
+    const currentLineDuration = calculateLineDuration(newBpm, currentLineChordCount, this.beatsPerChord)
     if (currentLineChordCount > 0 && currentLineDuration > 0) {
       const chordDuration = currentLineDuration / currentLineChordCount
       elapsedToCurrentPosition += currentChordIndex * chordDuration
@@ -156,7 +153,8 @@ export class TempoScrollEngine {
       // Calculate elapsed time to the new position
       let elapsedToNewPosition = 0
       for (let i = 0; i < lineIndex; i++) {
-        elapsedToNewPosition += this.lineDurationsMs[i] || 0
+        const lineChordCount = this.parsedSong?.lines?.[i]?.metadata?.chordCount ?? 0
+        elapsedToNewPosition += calculateLineDuration(this._state.currentBpm, lineChordCount, this.beatsPerChord)
       }
       
       // Adjust start time so that the new position becomes "now"
@@ -166,24 +164,6 @@ export class TempoScrollEngine {
   }
 
   // --- internal helpers ---
-  private recalculateDurations(): void {
-    log('Recalculating line durations...')
-    const bpm = this._state.currentBpm
-    const lines = this.parsedSong?.lines || []
-    this.lineDurationsMs = lines.map(line => {
-      const chordCount = line?.metadata?.chordCount ?? 0
-      return calculateLineDuration(bpm, chordCount, this.beatsPerChord)
-    })
-
-    // compute cumulative ends
-    this.cumulativeLineEndsMs = []
-    let acc = 0
-    for (const d of this.lineDurationsMs) {
-      acc += d
-      this.cumulativeLineEndsMs.push(acc)
-    }
-    log('Durations recalculated. Line durations:', this.lineDurationsMs, 'Cumulative ends:', this.cumulativeLineEndsMs)
-  }
 
   private scheduleTick(): void {
     log('Scheduling next tick...')
@@ -229,31 +209,41 @@ export class TempoScrollEngine {
     }
 
     // If we've reached the end, stop the engine
-    const totalDuration = this.cumulativeLineEndsMs.length
-      ? this.cumulativeLineEndsMs[this.cumulativeLineEndsMs.length - 1]
-      : 0
-    if (totalDuration > 0 && elapsed >= totalDuration) {
-      log('Reached end of song (elapsed:', elapsed, 'total duration:', totalDuration, '). Stopping engine.')
-      this.stop()
+    if (lineIndex >= this.parsedSong.lines.length - 1) {
+      const lastLineChordCount = this.parsedSong?.lines?.[lineIndex]?.metadata?.chordCount ?? 0
+      if (chordIndex >= lastLineChordCount - 1) {
+        log('Reached end of song at line:', lineIndex, 'chord:', chordIndex, '. Stopping engine.')
+        this.stop()
+      }
     }
   }
 
   private findPositionFromElapsed(elapsedMs: number): { lineIndex: number; chordIndex: number; elapsedMs: number } {
-    if (!this.cumulativeLineEndsMs.length) return { lineIndex: 0, chordIndex: 0, elapsedMs: 0 }
+    const lines = this.parsedSong?.lines || []
+    if (!lines.length) return { lineIndex: 0, chordIndex: 0, elapsedMs: 0 }
 
-    // find first cumulative end greater than elapsed
-    let lineIndex = this.cumulativeLineEndsMs.findIndex(end => elapsedMs < end)
-    if (lineIndex === -1) {
-      lineIndex = this.cumulativeLineEndsMs.length - 1
+    let remainingMs = elapsedMs
+    let lineIndex = 0
+
+    // Find which line we're in by subtracting line durations
+    for (let i = 0; i < lines.length; i++) {
+      const chordCount = lines[i]?.metadata?.chordCount ?? 0
+      const lineDuration = calculateLineDuration(this._state.currentBpm, chordCount, this.beatsPerChord)
+      
+      if (remainingMs < lineDuration || i === lines.length - 1) {
+        lineIndex = i
+        break
+      }
+      
+      remainingMs -= lineDuration
     }
 
-    const lineStartMs = lineIndex === 0 ? 0 : this.cumulativeLineEndsMs[lineIndex - 1]
-    const lineElapsed = Math.max(0, elapsedMs - lineStartMs)
-    const lineDuration = this.lineDurationsMs[lineIndex] || 0
-
-    const chordCount = this.parsedSong?.lines?.[lineIndex]?.metadata?.chordCount ?? 0
+    // Calculate chord position within the current line
+    const chordCount = lines[lineIndex]?.metadata?.chordCount ?? 0
+    const lineDuration = calculateLineDuration(this._state.currentBpm, chordCount, this.beatsPerChord)
+    
     const chordIndex = chordCount > 0 && lineDuration > 0
-      ? Math.min(chordCount - 1, Math.floor((lineElapsed / lineDuration) * chordCount))
+      ? Math.min(chordCount - 1, Math.floor((remainingMs / lineDuration) * chordCount))
       : 0
 
     return { lineIndex, chordIndex, elapsedMs }
