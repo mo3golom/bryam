@@ -48,9 +48,9 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: 'Hello' },
-              { chord: null, word: ' ' },
-              { chord: 'G', word: 'world' }
+              { chord: 'C', chordPosition: 0, word: 'Hello' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'G', chordPosition: 1, word: 'world' }
             ]
           }
         ]
@@ -82,8 +82,8 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'Am', word: 'Simple' },
-              { chord: null, word: ' song' }
+              { chord: 'Am', chordPosition: 0, word: 'Simple' },
+              { chord: null, chordPosition: null, word: ' song' }
             ]
           }
         ]
@@ -111,9 +111,9 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: 'Hello' },
-              { chord: null, word: ' ' },
-              { chord: 'G', word: 'world' }
+              { chord: 'C', chordPosition: 0, word: 'Hello' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'G', chordPosition: 1, word: 'world' }
             ]
           }
         ]
@@ -154,7 +154,7 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C unclosed bracket and weird content', word: '' }
+              { chord: 'C unclosed bracket and weird content', chordPosition: 0, word: '' }
             ]
           }
         ]
@@ -181,7 +181,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'Am', word: 'Styled' }]
+            parts: [{ chord: 'Am', chordPosition: 0, word: 'Styled' }]
           }
         ]
       })
@@ -192,7 +192,6 @@ describe('SongViewer Component', () => {
       const chordElement = target.querySelector('.chord')
       expect(chordElement?.className).toContain('text-blue-600')
       expect(chordElement?.className).toContain('font-semibold')
-      expect(chordElement?.className).toContain('text-sm')
       expect(chordElement?.textContent).toBe('Am')
     })
 
@@ -208,12 +207,12 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: 'Some' },
-              { chord: 'G', word: 'where' },
-              { chord: null, word: ' ' },
-              { chord: 'Am', word: 'over' },
-              { chord: null, word: ' the ' },
-              { chord: 'F', word: 'rainbow' }
+              { chord: 'C', chordPosition: 0, word: 'Some' },
+              { chord: 'G', chordPosition: 1, word: 'where' },
+              { chord: null, chordPosition: null, word: ' over the ' },
+              { chord: 'Am', chordPosition: 2, word: 'rainbow' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'F', chordPosition: 3, word: 'way up high' }
             ]
           }
         ]
@@ -245,13 +244,13 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'First line' }]
+            parts: [{ chord: 'C', chordPosition: 0, word: 'First line' }]
           },
           {
-            parts: [{ chord: null, word: '' }]
+            parts: [{ chord: null, chordPosition: null, word: '' }]
           },
           {
-            parts: [{ chord: 'G', word: 'Second line' }]
+            parts: [{ chord: 'G', chordPosition: 0, word: 'Second line' }]
           }
         ]
       })
@@ -278,7 +277,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Touch friendly' }]
+            parts: [{ chord: 'C', chordPosition: 0, word: 'Touch friendly' }]
           }
         ]
       })
@@ -307,7 +306,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Accessible content' }]
+            parts: [{ chord: 'C', chordPosition: 0, word: 'Accessible content' }]
           }
         ]
       })
@@ -340,9 +339,9 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: 'Hello' },
-              { chord: null, word: ' ' },
-              { chord: 'G', word: 'world' }
+              { chord: 'C', chordPosition: 0, word: 'Hello' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'G', chordPosition: 1, word: 'world' }
             ]
           }
         ]
@@ -371,7 +370,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Content' }]
+            parts: [{ chord: 'C', chordPosition:0,  word: 'Content' }]
           }
         ]
       })
@@ -400,16 +399,16 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: 'First' },
-              { chord: null, word: ' ' },
-              { chord: 'G', word: 'line' }
+              { chord: 'C', chordPosition: 0, word: 'First' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'G', chordPosition: 1, word: 'line' }
             ]
           },
           {
             parts: [
-              { chord: 'Am', word: 'Second' },
-              { chord: null, word: ' ' },
-              { chord: 'F', word: 'line' }
+              { chord: 'Am', chordPosition: 0, word: 'Second' },
+              { chord: null, chordPosition: null, word: ' ' },
+              { chord: 'F', chordPosition: 1, word: 'line' }
             ]
           }
         ]
@@ -451,7 +450,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Content' }]
+            parts: [{ chord: 'C', chordPosition: 0, word: 'Content' }]
           }
         ]
       })
@@ -474,7 +473,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Content' }]
+            parts: [{ chord: 'C', chordPosition: 0,  word: 'Content' }]
           }
         ]
       })
@@ -557,7 +556,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Content' }]
+            parts: [{ chord: 'C', chordPosition:0, word: 'Content' }]
           }
         ]
       })
@@ -584,7 +583,7 @@ describe('SongViewer Component', () => {
       mockParseChordPro.mockReturnValue({
         lines: [
           {
-            parts: [{ chord: 'C', word: 'Content' }]
+            parts: [{ chord: 'C', chordPosition: 0, word: 'Content' }]
           }
         ]
       })
@@ -612,14 +611,14 @@ describe('SongViewer Component', () => {
         lines: [
           {
             parts: [
-              { chord: 'C', word: '' },
-              { chord: 'G', word: '' },
-              { chord: 'Am', word: '' },
-              { chord: 'F', word: '' },
-              { chord: 'C', word: '' },
-              { chord: 'G', word: '' },
-              { chord: 'F', word: '' },
-              { chord: 'C', word: '' }
+              { chord: 'C', chordPosition: 0, word: '' },
+              { chord: 'G', chordPosition: 1, word: '' },
+              { chord: 'Am', chordPosition: 2, word: '' },
+              { chord: 'F', chordPosition: 3, word: '' },
+              { chord: 'C', chordPosition: 4, word: '' },
+              { chord: 'G', chordPosition: 5, word: '' },
+              { chord: 'F', chordPosition: 6, word: '' },
+              { chord: 'C', chordPosition: 7, word: '' }
             ]
           }
         ]

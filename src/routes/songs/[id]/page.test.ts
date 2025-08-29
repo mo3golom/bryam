@@ -141,9 +141,10 @@ describe('Individual Song Page Integration Tests', () => {
       // Check for SVG icon
       const svgIcon = backButton.querySelector('svg')
       expect(svgIcon).toBeInTheDocument()
-      expect(svgIcon).toHaveClass('mr-2')
-      expect(svgIcon).toHaveClass('h-5')
-      expect(svgIcon).toHaveClass('w-5')
+      expect(svgIcon).toHaveClass('icon')
+      expect(svgIcon).toHaveClass('icon-tabler')
+      expect(svgIcon).toHaveClass('icons-tabler-outline')
+      expect(svgIcon).toHaveClass('icon-tabler-arrow-left')
     })
   })
 
@@ -387,7 +388,7 @@ describe('Individual Song Page Integration Tests', () => {
       expect(backButton).toHaveAccessibleName()
 
       // Check that text content is accessible
-      expect(backButton.textContent).toContain('Back')
+      expect(backButton.textContent).toContain('Назад')
     })
 
     it('should maintain proper heading hierarchy', () => {

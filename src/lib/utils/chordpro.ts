@@ -35,6 +35,7 @@ export function parseChordPro(text: string): ParsedSong {
 
     // Handle empty lines
     if (line.trim() === '') {
+      parsedLines.push({ parts: [{ chord: null, chordPosition: null, word: '' }] })
       continue
     }
 
@@ -84,7 +85,7 @@ export function parseChordPro(text: string): ParsedSong {
       parts.push({ chord: null, chordPosition: null, word: line })
     }
 
-    // Count chords in this line (parts where chord !== null)
+    // Add the line to parsed lines only if it has chords
     if (chordPosition > 0) {
       parsedLines.push({ parts, metadata: { chordCount: chordPosition } })
     }

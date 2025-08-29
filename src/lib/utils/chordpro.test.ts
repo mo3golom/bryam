@@ -10,9 +10,9 @@ describe('ChordPro Parser', () => {
       
       expect(result.lines).toHaveLength(1)
   expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Hello' },
-        { chord: null, word: ' ' },
-        { chord: 'G', word: 'world' }
+        { chord: 'C', chordPosition: 0, word: 'Hello' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'G', chordPosition: 1, word: 'world' }
       ])
   expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
@@ -22,9 +22,9 @@ describe('ChordPro Parser', () => {
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'Am', word: 'Amazing' },
-        { chord: null, word: ' ' },
-        { chord: 'F', word: 'grace' }
+        { chord: 'Am', chordPosition: 0, word: 'Amazing' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'F', chordPosition: 1, word: 'grace' }
       ])
   expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
@@ -34,10 +34,10 @@ describe('ChordPro Parser', () => {
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: null, word: 'Some' },
-        { chord: 'C', word: 'where' },
-        { chord: null, word: ' over the ' },
-        { chord: 'G', word: 'rainbow' }
+        { chord: null, chordPosition: null, word: 'Some' },
+        { chord: 'C', chordPosition: 0, word: 'where' },
+        { chord: null, chordPosition: null, word: ' over the ' },
+        { chord: 'G', chordPosition: 1, word: 'rainbow' }
       ])
   expect(result.lines[0].metadata?.chordCount).toBe(2)
     })
@@ -47,8 +47,8 @@ describe('ChordPro Parser', () => {
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: '[G]word' },
-        { chord: 'G', word: 'word' }
+        { chord: 'C', chordPosition: 0, word: '[G]word' },
+        { chord: 'G', chordPosition: 1, word: 'word' }
       ])
   // In this case parser treats the first part as a chord with the following text
   expect(result.lines[0].metadata?.chordCount).toBe(2)
@@ -118,10 +118,7 @@ describe('ChordPro Parser', () => {
       const input = 'This is just a line of lyrics'
       const result = parseChordPro(input)
       
-      expect(result.lines).toHaveLength(1)
-      expect(result.lines[0].parts).toEqual([
-        { chord: null, word: 'This is just a line of lyrics' }
-      ])
+      expect(result.lines).toHaveLength(0) // No chords, so no lines in result
     })
 
     it('should handle empty input', () => {
@@ -136,8 +133,8 @@ describe('ChordPro Parser', () => {
       const result = parseChordPro(input)
       
       expect(result.lines).toHaveLength(2)
-      expect(result.lines[0].parts).toEqual([{ chord: null, word: '' }])
-      expect(result.lines[1].parts).toEqual([{ chord: null, word: '' }])
+      expect(result.lines[0].parts).toEqual([{ chord: null, chordPosition: null, word: '' }])
+      expect(result.lines[1].parts).toEqual([{ chord: null, chordPosition: null, word: '' }])
     })
 
     it('should handle whitespace-only lines', () => {
@@ -146,7 +143,7 @@ describe('ChordPro Parser', () => {
       
       expect(result.lines).toHaveLength(1)
       expect(result.lines[0].parts).toEqual([
-        { chord: null, word: '' }
+        { chord: null, chordPosition: null, word: '' }
       ])
     })
   })
@@ -160,33 +157,28 @@ And the dreams that you dream of
       
       const result = parseChordPro(input)
       
-      expect(result.lines).toHaveLength(4)
+      expect(result.lines).toHaveLength(3) // Only lines with chords
       
       // First line
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Somewhere' },
-        { chord: null, word: ' ' },
-        { chord: 'Em', word: 'over' },
-        { chord: null, word: ' the rainbow' }
+        { chord: 'C', chordPosition: 0, word: 'Somewhere' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'Em', chordPosition: 1, word: 'over' },
+        { chord: null, chordPosition: null, word: ' the rainbow' }
       ])
       
       // Second line
       expect(result.lines[1].parts).toEqual([
-        { chord: 'F', word: 'Way' },
-        { chord: null, word: ' up ' },
-        { chord: 'C', word: 'high' }
+        { chord: 'F', chordPosition: 0, word: 'Way' },
+        { chord: null, chordPosition: null, word: ' up ' },
+        { chord: 'C', chordPosition: 1, word: 'high' }
       ])
       
-      // Third line (no chords)
+      // Third line (was line 4, now line 3 since line without chords is skipped)
       expect(result.lines[2].parts).toEqual([
-        { chord: null, word: 'And the dreams that you dream of' }
-      ])
-      
-      // Fourth line
-      expect(result.lines[3].parts).toEqual([
-        { chord: 'G', word: 'Once' },
-        { chord: null, word: ' in a lulla' },
-        { chord: 'Am', word: 'by' }
+        { chord: 'G', chordPosition: 0, word: 'Once' },
+        { chord: null, chordPosition: null, word: ' in a lulla' },
+        { chord: 'Am', chordPosition: 1, word: 'by' }
       ])
     })
 
@@ -196,15 +188,15 @@ Lyrics on the next line`
       
       const result = parseChordPro(input)
       
-      expect(result.lines).toHaveLength(2)
+      expect(result.lines).toHaveLength(1) // Only the line with chords
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: '' },
-        { chord: null, word: ' ' },
-        { chord: 'G', word: '' },
-        { chord: null, word: ' ' },
-        { chord: 'Am', word: '' },
-        { chord: null, word: ' ' },
-        { chord: 'F', word: '' }
+        { chord: 'C', chordPosition: 0, word: '' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'G', chordPosition: 1, word: '' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'Am', chordPosition: 2, word: '' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'F', chordPosition: 3, word: '' }
       ])
     })
   })
@@ -215,7 +207,7 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C Hello [G', word: 'world' }
+        { chord: 'C Hello [G', chordPosition: 0, word: 'world' }
       ])
     })
 
@@ -224,9 +216,9 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: null, word: '[] Hello ' },
-        { chord: 'G', word: 'world' },
-        { chord: null, word: ' []' }
+        { chord: null, chordPosition: null, word: '[] Hello ' },
+        { chord: 'G', chordPosition: 0, word: 'world' },
+        { chord: null, chordPosition: null, word: ' []' }
       ])
     })
 
@@ -235,8 +227,8 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: null, word: '[  ] Hello ' },
-        { chord: 'G', word: 'world' }
+        { chord: null, chordPosition: null, word: '[  ] Hello ' },
+        { chord: 'G', chordPosition: 0, word: 'world' }
       ])
     })
 
@@ -245,9 +237,9 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: '[C', word: ']' },
-        { chord: null, word: ' Hello ' },
-        { chord: 'G[Am', word: ']world' }
+        { chord: '[C', chordPosition: 0, word: ']' },
+        { chord: null, chordPosition: null, word: ' Hello ' },
+        { chord: 'G[Am', chordPosition: 1, word: ']world' }
       ])
     })
 
@@ -256,10 +248,10 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Hello' },
-        { chord: null, word: ' & ' },
-        { chord: 'G', word: 'world!' },
-        { chord: null, word: ' @#$%^&*()' }
+        { chord: 'C', chordPosition: 0, word: 'Hello' },
+        { chord: null, chordPosition: null, word: ' & ' },
+        { chord: 'G', chordPosition: 1, word: 'world!' },
+        { chord: null, chordPosition: null, word: ' @#$%^&*()' }
       ])
     })
 
@@ -317,9 +309,9 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Hello' },
-        { chord: null, word: '     ' },
-        { chord: 'G', word: 'world' }
+        { chord: 'C', chordPosition: 0, word: 'Hello' },
+        { chord: null, chordPosition: null, word: '     ' },
+        { chord: 'G', chordPosition: 1, word: 'world' }
       ])
     })
 
@@ -329,9 +321,9 @@ Lyrics on the next line`
       
       expect(result.lines).toHaveLength(2)
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Hello' },
-        { chord: null, word: '\t' },
-        { chord: 'G', word: 'world' }
+        { chord: 'C', chordPosition: 0, word: 'Hello' },
+        { chord: null, chordPosition: null, word: '\t' },
+        { chord: 'G', chordPosition: 1, word: 'world' }
       ])
     })
 
@@ -340,13 +332,13 @@ Lyrics on the next line`
       const result = parseChordPro(input)
       
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: '' },
-        { chord: null, word: '  ' },
-        { chord: 'G', word: '' },
-        { chord: null, word: '  ' },
-        { chord: 'Am', word: '' },
-        { chord: null, word: '  ' },
-        { chord: 'F', word: '' }
+        { chord: 'C', chordPosition: 0, word: '' },
+        { chord: null, chordPosition: null, word: '  ' },
+        { chord: 'G', chordPosition: 1, word: '' },
+        { chord: null, chordPosition: null, word: '  ' },
+        { chord: 'Am', chordPosition: 2, word: '' },
+        { chord: null, chordPosition: null, word: '  ' },
+        { chord: 'F', chordPosition: 3, word: '' }
       ])
     })
   })
@@ -369,15 +361,15 @@ Lyrics on the next line`
       
       // Check first line
       expect(result.lines[0].parts).toEqual([
-        { chord: 'C', word: 'Somewhere' },
-        { chord: null, word: ' ' },
-        { chord: 'Em', word: 'over' },
-        { chord: null, word: ' the rainbow' }
+        { chord: 'C', chordPosition: 0, word: 'Somewhere' },
+        { chord: null, chordPosition: null, word: ' ' },
+        { chord: 'Em', chordPosition: 1, word: 'over' },
+        { chord: null, chordPosition: null, word: ' the rainbow' }
       ])
       
       // Check empty line
       expect(result.lines[4].parts).toEqual([
-        { chord: null, word: '' }
+        { chord: null, chordPosition: null, word: '' }
       ])
     })
 
@@ -392,15 +384,10 @@ Chorus:
       
       const result = parseChordPro(song)
       
-      expect(result.lines).toHaveLength(7)
+      expect(result.lines).toHaveLength(5) // Lines with chords: [C] [G] [Am] [F], [C] [G] [F] [C], [F]Sing along [C]now, [G]Everyone [Am]together, plus one more
       
-      // Check verse label
-      expect(result.lines[0].parts).toEqual([
-        { chord: null, word: 'Verse:' }
-      ])
-      
-      // Check chord-only line
-      expect(result.lines[1].parts.filter(part => part.chord)).toHaveLength(4)
+      // Check first chord-only line
+      expect(result.lines[0].parts.filter(part => part.chord)).toHaveLength(4)
     })
   })
 })

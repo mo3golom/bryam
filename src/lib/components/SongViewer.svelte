@@ -457,23 +457,6 @@
       font-weight 0.3s ease;
   }
 
-  /* Clickable line styling during autoscroll */
-  .line-container.clickable {
-    cursor: pointer;
-    border-radius: 0.375rem;
-    padding: 0.25rem;
-    margin: -0.25rem;
-  }
-
-  .line-container.clickable:hover {
-    background-color: rgba(59, 130, 246, 0.1);
-  }
-
-  .line-container.clickable:focus {
-    outline: 2px solid rgb(59, 130, 246);
-    outline-offset: 2px;
-  }
-
   /* Highlight the active chord within the active line */
   .chord-active {
     color: blueviolet;
