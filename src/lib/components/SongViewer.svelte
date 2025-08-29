@@ -125,7 +125,6 @@
     if (!engine) return;
 
     const activeLineElement = document.querySelector(`[data-line-index="${scrollActiveLineIndex}"]`) as HTMLElement | null;
-
     if (activeLineElement && !isElementVisible(activeLineElement)) {
       // Scroll to the active line first, preferably to center
       activeLineElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -146,7 +145,8 @@
     if (!engine) return;
     engine.stop();
     engine.setBpm(DEFAULT_BPM);
-    engine.start();
+    scrollActiveLineIndex = 0;
+    startAutoScroll();
   }
 
   // Handle clicking on a song line during autoscroll
@@ -243,7 +243,7 @@
                         <div class="chord-word-pair inline-block">
                           {#if part.chord}
                             <div
-                              class="chord text-blue-600 font-semibold leading-none mb-1 min-h-[1rem]"
+                              class="chord"
                               class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
                               aria-label="Chord: {part.chord}"
                             >
@@ -422,43 +422,3 @@
     </div>
   </div>
 </article>
-
-<style>
-  .song-content {
-    font-family: "Courier New", Consolas, "Liberation Mono", monospace;
-  }
-
-  .chord {
-    font-size: 0.8em; /* Chords are 80% of the base text size */
-  }
-
-  .word {
-    font-size: 1em; /* Words inherit the full base text size */
-  }
-
-  .chord-word-pair {
-    position: relative;
-  }
-
-  /* Ensure proper alignment on mobile devices */
-  @media (max-width: 640px) {
-    .chord-word-pair {
-      margin-right: 2px;
-    }
-  }
-
-  /* Touch-friendly spacing for mobile and dynamic styling */
-  .line-container {
-    min-height: 2.5rem;
-    touch-action: manipulation;
-    transition:
-      opacity 0.3s ease,
-      color 0.3s ease,
-      font-weight 0.3s ease;
-  }
-
-  /* Highlight the active chord within the active line */
-  .chord-active {
-    color: blueviolet;
-  }
-</style>

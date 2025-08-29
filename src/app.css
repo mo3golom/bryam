@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @plugin "daisyui" {
   themes: light;
   root: ":root";
@@ -65,6 +66,48 @@
     @apply text-gray-800 leading-relaxed;
   }
 
+  .song-content {
+    font-family: "Courier New", Consolas, "Liberation Mono", monospace;
+  }
+
+  .chord {
+    @apply font-semibold leading-none mb-1 min-h-[1rem];
+    font-size: 0.8em;
+    /* Chords are 80% of the base text size */
+  }
+
+  .chord-word-pair {
+    position: relative;
+  }
+
+  /* Highlight the active chord within the active line */
+  .chord-active {
+    @apply text-secondary font-bold;
+  }
+
+  /* Touch-friendly spacing for mobile and dynamic styling */
+  .line-container {
+    min-height: 2.5rem;
+    touch-action: manipulation;
+    transition:
+      opacity 0.3s ease,
+      color 0.3s ease,
+      font-weight 0.3s ease;
+  }
+
+  .word {
+    font-size: 1em;
+    /* Words inherit the full base text size */
+  }
+
+
+
+
+
+
+
+
+
   /* Touch-friendly interactive elements */
   .touch-manipulation {
     touch-action: manipulation;
@@ -86,7 +129,7 @@
     .chord {
       @apply text-blue-800 font-bold;
     }
-    
+
     .focus-ring:focus {
       @apply ring-4 ring-blue-600;
     }
@@ -99,9 +142,16 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    
+
     html {
       scroll-behavior: auto;
+    }
+  }
+
+  /* Ensure proper alignment on mobile devices */
+  @media (max-width: 640px) {
+    .chord-word-pair {
+      margin-right: 2px;
     }
   }
 }
