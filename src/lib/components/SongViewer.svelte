@@ -247,7 +247,7 @@
                             {part.chord}
                           </div>
                         {:else}
-                          <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
+                          <div class="chord text-transparent" aria-hidden="true">{part.word[0]}</div>
                         {/if}
                         <div class="word text-gray-900 leading-tight whitespace-pre-wrap">
                           {part.word}
@@ -347,7 +347,7 @@
           >
         </button>
       {/if}
-      <span class="dock-label text-main-font">auto scroll</span>
+      <span class="dock-label text-main-font">авто скролл</span>
     </div>
     <div>
       <div class="join">
@@ -385,7 +385,7 @@
           >
         </button>
       </div>
-      <span class="dock-label text-main-font">text size</span>
+      <span class="dock-label text-main-font">размер текста</span>
     </div>
   </div>
 </article>

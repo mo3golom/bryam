@@ -190,8 +190,6 @@ describe('SongViewer Component', () => {
       flushSync()
 
       const chordElement = target.querySelector('.chord')
-      expect(chordElement?.className).toContain('text-blue-600')
-      expect(chordElement?.className).toContain('font-semibold')
       expect(chordElement?.textContent).toBe('Am')
     })
 

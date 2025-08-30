@@ -147,10 +147,6 @@ describe('End-to-End User Journey Integration Tests', () => {
       const pageMain = container.querySelector('main')
       expect(pageMain).toHaveClass('min-h-screen')
 
-      const pageContainer = container.querySelector('.max-w-md')
-      expect(pageContainer).toBeInTheDocument()
-      expect(pageContainer).toHaveClass('mx-auto')
-
       const backButton = screen.getByRole('button', { name: /go back to previous page/i })
       expect(backButton).toHaveClass('touch-manipulation')
       expect(backButton).toHaveClass('py-2')

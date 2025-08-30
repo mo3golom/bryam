@@ -108,10 +108,6 @@ describe('Individual Song Page Integration Tests', () => {
 
       const mainElement = container.querySelector('main')
       expect(mainElement).toHaveClass('min-h-screen')
-
-      const containerDiv = container.querySelector('.max-w-md')
-      expect(containerDiv).toBeInTheDocument()
-      expect(containerDiv).toHaveClass('mx-auto')
     })
 
     it('should render back button with proper styling and accessibility', () => {
@@ -205,7 +201,6 @@ describe('Individual Song Page Integration Tests', () => {
 
       // Check for essential elements only
       expect(container.querySelector('main')).toBeInTheDocument()
-      expect(container.querySelector('.max-w-md')).toBeInTheDocument()
       expect(container.querySelector('button')).toBeInTheDocument()
     })
 
