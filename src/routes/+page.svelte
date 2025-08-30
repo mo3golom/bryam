@@ -26,7 +26,6 @@
 </svelte:head>
 
 <main id="main-content" class="min-h-screen pt-8" tabindex="-1">
-  <div class="max-w-md mx-auto">
     <header class="mb-6 text-center">
       <h1
         id="daily-quiz-heading"
@@ -46,7 +45,6 @@
     </header>
 
     <SongList {songs} {loading} {error} onRetry={handleRetry} />
-  </div>
 </main>
 
 <!-- Global error notifications -->

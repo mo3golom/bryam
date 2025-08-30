@@ -14,6 +14,6 @@
 
 <SkipNavigation />
 
-<div class="min-h-screen max-w-md mx-auto">
+<div class="min-h-screen max-w-lg mx-auto">
 	{@render children?.()}
 </div>

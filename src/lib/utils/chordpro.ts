@@ -17,10 +17,50 @@ export interface ParsedSong {
 }
 
 /**
+ * Splits text into parts separating spaces from words
+ * All spaces become dedicated parts without chords
+ * All words are trimmed of leading/trailing spaces
+ */
+function splitTextWithSpaces(text: string): ChordLyricPair[] {
+  if (!text) return []
+  
+  const parts: ChordLyricPair[] = []
+  let currentIndex = 0
+  
+  while (currentIndex < text.length) {
+    // Find the next space or non-space sequence
+    if (text[currentIndex] === ' ' || text[currentIndex] === '\t') {
+      // Collect consecutive spaces/tabs
+      let spaceEnd = currentIndex
+      while (spaceEnd < text.length && (text[spaceEnd] === ' ' || text[spaceEnd] === '\t')) {
+        spaceEnd++
+      }
+      parts.push({ chord: null, chordPosition: null, word: text.substring(currentIndex, spaceEnd) })
+      currentIndex = spaceEnd
+    } else {
+      // Collect non-space characters
+      let wordEnd = currentIndex
+      while (wordEnd < text.length && text[wordEnd] !== ' ' && text[wordEnd] !== '\t') {
+        wordEnd++
+      }
+      const word = text.substring(currentIndex, wordEnd).trim()
+      if (word) {
+        parts.push({ chord: null, chordPosition: null, word })
+      }
+      currentIndex = wordEnd
+    }
+  }
+  
+  return parts
+}
+
+/**
  * Parse ChordPro format into renderable data structure
  * Handles standard chord notation patterns like [C], [Em], [F#m], etc.
  * Supports major, minor, diminished, augmented, and suspended chords
  * Gracefully handles malformed ChordPro content
+ * All spaces are separated as dedicated parts without chords
+ * All words are trimmed of leading/trailing spaces
  */
 export function parseChordPro(text: string): ParsedSong {
   if (!text || typeof text !== 'string') {
@@ -44,6 +84,7 @@ export function parseChordPro(text: string): ParsedSong {
     let lastIndex = 0
     let match
     let chordPosition = 0
+    
     while ((match = chordRegex.exec(line)) !== null) {
       const chordStart = match.index
       const chordEnd = chordRegex.lastIndex
@@ -54,35 +95,55 @@ export function parseChordPro(text: string): ParsedSong {
         continue
       }
 
-      // Add text before the chord (if any)
+      // Add text before the chord (if any) with proper space handling
       if (chordStart > lastIndex) {
         const textBefore = line.substring(lastIndex, chordStart)
         if (textBefore) {
-          parts.push({ chord: null, chordPosition: null, word: textBefore })
+          parts.push(...splitTextWithSpaces(textBefore))
         }
       }
 
-      // Find the word that follows this chord
+      // Find the text that follows this chord
       const remainingText = line.substring(chordEnd)
-      const wordMatch = remainingText.match(/^(\S*)/)
-      const word = wordMatch ? wordMatch[1] : ''
+      const textMatch = remainingText.match(/^([^\[]*?)(?=\[|$)/)
+      const followingText = textMatch ? textMatch[1] : ''
 
-      parts.push({ chord, chordPosition, word })
-      lastIndex = chordEnd + word.length
+      if (followingText) {
+        // Split the following text into spaces and words
+        const textParts = splitTextWithSpaces(followingText)
+        if (textParts.length > 0) {
+          // The first part (word) goes with the chord
+          const firstPart = textParts[0]
+          parts.push({ chord, chordPosition, word: firstPart.word })
+          
+          // Add remaining parts (spaces and words) as separate parts
+          for (let i = 1; i < textParts.length; i++) {
+            parts.push(textParts[i])
+          }
+        } else {
+          // No text parts, just add the chord with empty word
+          parts.push({ chord, chordPosition, word: '' })
+        }
+      } else {
+        // No following text, just add the chord with empty word
+        parts.push({ chord, chordPosition, word: '' })
+      }
+
+      lastIndex = chordEnd + followingText.length
       chordPosition++
     }
 
-    // Add any remaining text after the last chord
+    // Add any remaining text after the last chord with proper space handling
     if (lastIndex < line.length) {
       const remainingText = line.substring(lastIndex)
       if (remainingText) {
-        parts.push({ chord: null, chordPosition: null, word: remainingText })
+        parts.push(...splitTextWithSpaces(remainingText))
       }
     }
 
-    // If no chords were found, treat the entire line as lyrics
+    // If no chords were found, treat the entire line as lyrics with proper space handling
     if (parts.length === 0) {
-      parts.push({ chord: null, chordPosition: null, word: line })
+      parts.push(...splitTextWithSpaces(line))
     }
 
     // Add the line to parsed lines only if it has chords

@@ -17,7 +17,6 @@
 </svelte:head>
 
 <main class="min-h-screen py-4 px-4">
-  <div class="max-w-md mx-auto">
     <!-- Back button -->
     <div class="mb-4">
       <button
@@ -67,5 +66,4 @@
         </div>
       </div>
     {/if}
-  </div>
 </main>

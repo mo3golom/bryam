@@ -22,10 +22,8 @@
 </svelte:head>
 <main id="main-content" class="min-h-screen" tabindex="-1">
   <BackButton targetPage="/" />
-  <div class="max-w-md mx-auto">
     <!-- Song content -->
     <SongViewer songData={song} />
-  </div>
 </main>
 
 <!-- Global error notifications -->

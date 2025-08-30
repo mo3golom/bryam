@@ -60,11 +60,10 @@
 
   // Scroll the active line into view when the engine's activeLineIndex changes
   $effect(() => {
+    console.log(scrollActiveChordIndex, scrollActiveLineIndex);
     if (typeof document === "undefined") return;
 
     if (scrollActiveLineIndex) {
-      console.log("Active line index changed:", scrollActiveLineIndex);
-
       if (scrollActiveLineIndex < 0) return;
 
       const selector = `[data-line-index="${scrollActiveLineIndex}"]`;
@@ -217,86 +216,54 @@
         {:else}
           <div class="space-y-4">
             {#each parsedSong.lines as line, i}
-              {#if scrollIsActive && !scrollIsPaused}
-                <!-- Interactive button element during autoscroll -->
-                <div
-                  class="line-container"
-                  style={getLineStyle(i)}
-                  data-line-index={i}
-                  role="button"
-                  onclick={() => handleLineClick(i)}
-                  onkeydown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleLineClick(i);
-                    }
-                  }}
-                  tabindex={i + 1}
-                  aria-label="Jump to line {i + 1}"
-                >
-                  {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
-                    <!-- Empty line for spacing -->
-                    <div class="h-4"></div>
-                  {:else}
-                    <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
-                      {#each line.parts as part}
-                        <div class="chord-word-pair inline-block">
-                          {#if part.chord}
-                            <div
-                              class="chord"
-                              class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
-                              aria-label="Chord: {part.chord}"
-                            >
-                              {part.chord}
-                            </div>
-                          {:else}
-                            <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
-                          {/if}
-                          <div class="word text-gray-900 leading-tight">
-                            {part.word}
+              <div
+                class="line-container"
+                style={getLineStyle(i)}
+                data-line-index={i}
+                role="button"
+                onclick={() => handleLineClick(i)}
+                onkeydown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleLineClick(i);
+                  }
+                }}
+                tabindex={i + 1}
+                aria-label="Jump to line {i + 1}"
+              >
+                {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
+                  <!-- Empty line for spacing -->
+                  <div class="h-4"></div>
+                {:else}
+                  <div class="flex flex-wrap items-start leading-relaxed">
+                    {#each line.parts as part}
+                      <div class="chord-word-pair inline-block">
+                        {#if part.chord}
+                          <div
+                            class="chord"
+                            class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
+                            aria-label="Chord: {part.chord}"
+                          >
+                            {part.chord}
                           </div>
+                        {:else}
+                          <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
+                        {/if}
+                        <div class="word text-gray-900 leading-tight whitespace-pre-wrap">
+                          {part.word}
                         </div>
-                      {/each}
-                    </div>
-                  {/if}
-                </div>
-              {:else}
-                <!-- Non-interactive element when autoscroll is not active -->
-                <div class="line-container" style={getLineStyle(i)} data-line-index={i}>
-                  {#if line.parts.length === 1 && line.parts[0].chord === null && line.parts[0].word === ""}
-                    <!-- Empty line for spacing -->
-                    <div class="h-4"></div>
-                  {:else}
-                    <div class="flex flex-wrap items-start gap-x-1 leading-relaxed">
-                      {#each line.parts as part}
-                        <div class="chord-word-pair inline-block">
-                          {#if part.chord}
-                            <div
-                              class="chord text-blue-600 font-semibold leading-none mb-1 min-h-[1rem]"
-                              class:chord-active={scrollIsActive && !scrollIsPaused && i === scrollActiveLineIndex && part.chordPosition === scrollActiveChordIndex}
-                              aria-label="Chord: {part.chord}"
-                            >
-                              {part.chord}
-                            </div>
-                          {:else}
-                            <div class="chord-spacer min-h-[1rem] mb-1" aria-hidden="true"></div>
-                          {/if}
-                          <div class="word text-gray-900 leading-tight">
-                            {part.word}
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
-                  {/if}
-                </div>
-              {/if}
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             {/each}
           </div>
         {/if}
       </div>
     </div>
   </section>
-  <div class="dock border-0 max-w-md items-center bottom-4 rounded-3xl left-1/2 -translate-x-1/2 w-[calc(100%-16px)] bg-primary-content drop-shadow-xl drop-shadow-primary-content">
+  <div class="dock max-w-lg items-center rounded-t-3xl left-1/2 -translate-x-1/2">
     <div class="relative">
       {#if scrollIsActive && !scrollIsPaused}
         <div class="absolute -top-6 left-1/2 -translate-x-1/2 rounded-3xl p-1 pl-2 pr-2 bg-primary-content text-main-font">{scrollCurrentBpm}&nbsp;BPM</div>
